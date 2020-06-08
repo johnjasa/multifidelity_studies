@@ -2,7 +2,20 @@ import numpy as np
 import openmdao.api as om
 
 
-class simple_one_D(om.ExplicitComponent):
+def simple_1D_high(x):
+    A = 0.5
+    B = 10.
+    C = -5.
+    
+    term1 = A * (6 * x - 2) ** 2 * np.sin(12 * x - 4)
+    term2 = B * (x - 0.5)
+    return term1 + term2 + C
+    
+def simple_1D_low(x):
+    return (6 * x - 2) ** 2 * np.sin(12 * x - 4)
+
+
+class simple_1D(om.ExplicitComponent):
     
     def initialize(self):
         self.options.declare('fidelity', values=['low', 'high'])
@@ -18,14 +31,8 @@ class simple_one_D(om.ExplicitComponent):
     def compute(self, inputs, outputs):
         fidelity = self.options['fidelity']
         x = inputs['x']
-        A = 0.5
-        B = 10.
-        C = -5.
-        
+
         if fidelity == 'high':
-            term1 = A * (6 * x - 2) ** 2 * np.sin(12 * x - 4)
-            term2 = B * (x - 0.5)
-            outputs['y'] = term1 + term2 + C
-            
+            outputs['y'] = simple_1D_high(x)
         else:
-            outputs['y'] = (6 * x - 2) ** 2 * np.sin(12 * x - 4)
+            outputs['y'] = simple_1D_low(x)
