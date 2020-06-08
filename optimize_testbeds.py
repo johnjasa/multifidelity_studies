@@ -30,8 +30,8 @@ prob['x'] = 0.8
 
 s = time()
 
-num_high = 6
-num_low = 11
+num_high = 11
+num_low = 12
 
 x_low = np.linspace(0., 1., num_low)
 y_low = simple_1D_low(x_low)
