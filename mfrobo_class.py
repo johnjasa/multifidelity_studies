@@ -99,9 +99,6 @@ class MFROBO(BaseMCClass):
         FP = np.delete(FP, np.where(del_ax>0), 0) # Deleting the fidelities: rows
         t_Din = np.delete(t_Din, np.where(del_ax>0), None) # Deleting the times
         self.fB = np.delete(self.fB, np.where(del_ax>0), 1) # Deleting the fuelburn values: columns
-        self.SF = np.delete(self.SF, np.where(del_ax>0), 1) # Deleting the stress constraint values: columns
-        self.LC = np.delete(self.LC, np.where(del_ax>0), 1) # Deleting the lift constraint values: columns
-        self.CM = np.delete(self.CM, np.where(del_ax>0), 1) # Deleting the lift constraint values: columns
 
         if FP.shape[0]<2 or fail:
             print('Python runs failed for all fidelities for design:')
@@ -109,12 +106,6 @@ class MFROBO(BaseMCClass):
             # Assigning large values to the objective function: penalty
             mfB = 1e3
             vfB = 1e2
-            mSF = 1e1
-            vSF = 1e1
-            mLC = 1e1
-            vLC = 1e1
-            mCM = 1e1
-            vCM = 1e1
         else:
             # Finding correlations wrt highest fidelity (num_y=31,num_x=2)
             for i in range(FP.shape[0]):
@@ -171,9 +162,6 @@ class MFROBO(BaseMCClass):
                     tau2fB = np.delete(tau2fB, np.isnan(g_rat), None)
                     t_Din = np.delete(t_Din, np.isnan(g_rat), None)   # Delete time for failing fidelity
                     self.fB = np.delete(self.fB, np.isnan(g_rat),1) # Deleting the fuelburn values
-                    self.SF  = np.delete(self.SF, np.isnan(g_rat),1) # Deleting the stress constraint values
-                    self.LC = np.delete(self.LC, np.isnan(g_rat),1) # Deleting the lift constraint values
-                    self.CM = np.delete(self.CM, np.isnan(g_rat),1) # Deleting the lift constraint values
 
                     FP = np.delete(FP, np.isinf(g_rat),0) # Delete the failing fidelity
                     rhofB = np.delete(rhofB, np.isinf(g_rat), None)  # Delete the rho for the failing fidelity
@@ -182,13 +170,6 @@ class MFROBO(BaseMCClass):
                     tau2fB = np.delete(tau2fB, np.isinf(g_rat), None)
                     t_Din = np.delete(t_Din, np.isinf(g_rat), None)    # Delete time for lowest fidelity
                     self.fB = np.delete(self.fB, np.isinf(g_rat),1) # Deleting the fuelburn values
-                    self.SF  = np.delete(self.SF, np.isinf(g_rat),1) # Deleting the stress constraint values
-                    self.LC = np.delete(self.LC, np.isinf(g_rat),1) # Deleting the lift constraint values
-                    self.CM = np.delete(self.CM, np.isinf(g_rat),1) # Deleting the lift constraint values
-
-                    # # Correlation coefficients for models > FP.shape[0] are given a value of 0
-                    # rhofB[FP.shape[0]+1] = 0
-                    # qfB[FP.shape[0]+1] = 0
 
                 elif (np.sum(g_rat<0)>0) or (np.sum(w_rat<g_rat)>0): # lowest fidelity is not feasible model
                     # Delete the lowest fidelity and recompute the ratios
@@ -201,13 +182,7 @@ class MFROBO(BaseMCClass):
                     tau2fB = np.delete(tau2fB, -1, None)
                     t_Din = np.delete(t_Din, -1, None)    # Delete time for lowest fidelity
                     self.fB = np.delete(self.fB, -1, 1) # Deleting the fuelburn values
-                    self.SF  = np.delete(self.SF, -1, 1) # Deleting the stress constraint values
-                    self.LC = np.delete(self.LC, -1, 1) # Deleting the lift constraint values
-                    self.CM = np.delete(self.CM, -1, 1) # Deleting the lift constraint values
 
-                    # # Correlation coefficients for models > FP.shape[0] are given a value of 0
-                    # rhofB[FP.shape[0]+1] = 0
-                    # qfB[FP.shape[0]+1] = 0
                 else:
                     break
 
@@ -257,12 +232,6 @@ class MFROBO(BaseMCClass):
                 # Assigning large values to the objective function
                 mfB = 1e3
                 vfB = 1e2
-                mSF = 1e1
-                vSF = 1e1
-                mLC = 1e1
-                vLC = 1e1
-                mCM = 1e1
-                vCM = 1e1
             else:
 
                 m_star = m_star + nbXsamp # Adding back the initial samples
@@ -271,20 +240,10 @@ class MFROBO(BaseMCClass):
                 # Finding the mean and variance estimates using MFMC
                 # For highest fidelity
                 mfB = np.mean(self.fB[:m_star[0],0])
-                mSF = np.mean(self.SF[:m_star[0],0])
-                mLC = np.mean(self.LC[:m_star[0],0])
-                mCM = np.mean(self.CM[:m_star[0],0])
 
                 # Change of variable for variance estimate
                 var_samp = (m_star[0]/(m_star[0]-1))*(self.fB[:m_star[0],0]-np.mean(self.fB[:m_star[0],0]))**2
                 vfB = np.mean(var_samp)
-
-                var_sampSF = (m_star[0]/(m_star[0]-1))*(self.SF[:m_star[0],0]-np.mean(self.SF[:m_star[0],0]))**2
-                vSF = np.mean(var_sampSF)
-                var_sampLC = (m_star[0]/(m_star[0]-1))*(self.LC[:m_star[0],0]-np.mean(self.LC[:m_star[0],0]))**2
-                vLC = np.mean(var_sampLC)
-                var_sampCM = (m_star[0]/(m_star[0]-1))*(self.CM[:m_star[0],0]-np.mean(self.CM[:m_star[0],0]))**2
-                vCM = np.mean(var_sampCM)
 
                 for i in np.arange(1,FP.shape[0]):
                     # For lower fidelities: control variates
@@ -294,48 +253,10 @@ class MFROBO(BaseMCClass):
                     var_samp2 = (m_star[i-1]/(m_star[i-1]-1))*(self.fB[:m_star[i-1],i] - np.mean(self.fB[:m_star[i-1],i]))**2
                     vfB = vfB + beta_s[i]*(np.mean(var_samp1) - np.mean(var_samp2))
 
-                    mSF = mSF + alpha_s[i]*(np.mean(self.SF[:m_star[i],i]) - np.mean(self.SF[:m_star[i-1],i]))
-                    # Change of variable for variance estimate
-                    var_samp1SF = (m_star[i]/(m_star[i]-1))*(self.SF[:m_star[i],i] - np.mean(self.SF[:m_star[i],i]))**2
-                    var_samp2SF = (m_star[i-1]/(m_star[i-1]-1))*(self.SF[:m_star[i-1],i] - np.mean(self.SF[:m_star[i-1]+1,i]))**2
-                    vSF = vSF + beta_s[i]*(np.mean(var_samp1SF) - np.mean(var_samp2SF))
-
-                    mLC = mLC + alpha_s[i]*(np.mean(self.LC[:m_star[i],i]) - np.mean(self.LC[:m_star[i-1],i]))
-                    # Change of variable for variance estimate
-                    var_samp1LC = (m_star[i]/(m_star[i]-1))*(self.LC[:m_star[i],i] - np.mean(self.LC[:m_star[i],i]))**2
-                    var_samp2LC = (m_star[i-1]/(m_star[i-1]-1))*(self.LC[:m_star[i-1],i] - np.mean(self.LC[:m_star[i-1]+1,i]))**2
-                    vLC = vLC + beta_s[i]*(np.mean(var_samp1LC) - np.mean(var_samp2LC))
-
-                    mCM = mCM + alpha_s[i]*(np.mean(self.CM[:m_star[i],i]) - np.mean(self.CM[:m_star[i-1],i]))
-                    # Change of variable for variance estimate
-                    var_samp1CM = (m_star[i]/(m_star[i]-1))*(self.CM[:m_star[i],i] - np.mean(self.CM[:m_star[i],i]))**2
-                    var_samp2CM = (m_star[i-1]/(m_star[i-1]-1))*(self.CM[:m_star[i-1],i] - np.mean(self.CM[:m_star[i-1]+1,i]))**2
-                    vCM = vCM + beta_s[i]*(np.mean(var_samp1CM) - np.mean(var_samp2CM))
-
-                # Check if there is negative variance and only use the high fidelity samples for that case
-                # For CM constraint (maybe it should be checked for other constraints)
-                if 1: #vCM<0: # Only using the HF samples for the constraints
-                    mSF = np.mean(self.SF[:m_star[0],0])
-                    mLC = np.mean(self.LC[:m_star[0],0])
-                    mCM = np.mean(self.CM[:m_star[0],0])
-
-                    vSF = np.mean(var_sampSF)
-                    vLC = np.mean(var_sampLC)
-                    vCM = np.mean(var_sampCM)
-
         print(mfB, vfB)
-        print(mSF, vSF)
-        print(mLC, vLC)
-        print(mCM, vCM)
 
         self.mfB.append(mfB)
         self.vfB.append(vfB)
-        self.mSF.append(mSF)
-        self.vSF.append(vSF)
-        self.mLC.append(mLC)
-        self.vLC.append(vLC)
-        self.mCM.append(mCM)
-        self.vCM.append(vCM)
 
     def master_func(self, Din):
         """
@@ -365,9 +286,6 @@ class MFROBO(BaseMCClass):
         if run_case:
             # Clear out the results from a previous design point
             self.fB = np.zeros((0, self.num_fidelities))
-            self.SF = np.zeros((0, self.num_fidelities))
-            self.LC = np.zeros((0, self.num_fidelities))
-            self.CM = np.zeros((0, self.num_fidelities))
 
             self.MFMC(Din)
 

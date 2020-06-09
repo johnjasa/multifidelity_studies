@@ -27,20 +27,11 @@ class BaseMCClass():
         self.num_fidelities = FPtot.shape[0]
 
         self.fB = np.zeros((0, self.num_fidelities))
-        self.SF = np.zeros((0, self.num_fidelities))
-        self.LC = np.zeros((0, self.num_fidelities))
-        self.CM = np.zeros((0, self.num_fidelities))
 
         # Store history parameters
         self.D_all = []
         self.mfB = []
         self.vfB = []
-        self.mSF = []
-        self.vSF = []
-        self.mLC = []
-        self.vLC = []
-        self.mCM = []
-        self.vCM = []
         self.m_star_all = []
         self.FP_all = []
         self.rhofB_all = []
@@ -169,15 +160,11 @@ class BaseMCClass():
                 print(fB)
         print(counter, ' bad cases')
 
-
     def runAeroStruct(self, X, FP, DX, m_star):
 
         print(DX)
 
         new_fB = np.zeros((m_star[-1], FP.shape[0]))
-        new_SF = np.zeros((m_star[-1], FP.shape[0]))
-        new_LC = np.zeros((m_star[-1], FP.shape[0]))
-        new_CM = np.zeros((m_star[-1], FP.shape[0]))
 
         for j, m in enumerate(m_star):
             if m > 0:
@@ -187,12 +174,6 @@ class BaseMCClass():
                     # Design variable
 
                     new_fB[i, j] = 1. + np.random.random()
-                    new_SF[i, j] = 0.1 + np.random.random()
-                    new_LC[i, j] = 0.2 + np.random.random()
-                    new_CM[i, j] = 0.3 + np.random.random()
                     
         self.fB = np.vstack((self.fB, new_fB))
-        self.SF = np.vstack((self.SF, new_SF))
-        self.LC = np.vstack((self.LC, new_LC))
-        self.CM = np.vstack((self.CM, new_CM))
         print()
