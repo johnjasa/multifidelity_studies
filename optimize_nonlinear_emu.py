@@ -42,37 +42,44 @@ X_train, Y_train = convert_xy_lists_to_arrays([x_train_l, x_train_h], [y_train_l
 base_kernel = GPy.kern.RBF
 kernels = make_non_linear_kernels(base_kernel, 2, X_train.shape[1] - 1)
 nonlin_mf_model = NonLinearMultiFidelityModel(X_train, Y_train, n_fidelities=2, kernels=kernels, 
-                                              verbose=True, optimization_restarts=5)
+                                              verbose=True, optimization_restarts=1)
 for m in nonlin_mf_model.models:
     m.Gaussian_noise.variance.fix(0)
     
 nonlin_mf_model.optimize()
 
-## Compute mean and variance predictions
+from emukit.bayesian_optimization.acquisitions import ExpectedImprovement
+ei = ExpectedImprovement(nonlin_mf_model)
 
-hf_mean_nonlin_mf_model, hf_var_nonlin_mf_model = nonlin_mf_model.predict(X_plot_high)
-hf_std_nonlin_mf_model = np.sqrt(hf_var_nonlin_mf_model)
+ei_locations = np.atleast_2d(np.array([[0.4232, 0.6761]]))
 
-lf_mean_nonlin_mf_model, lf_var_nonlin_mf_model = nonlin_mf_model.predict(X_plot_low)
-lf_std_nonlin_mf_model = np.sqrt(lf_var_nonlin_mf_model)
+print(ei.evaluate(ei_locations))
 
-
-## Plot posterior mean and variance of nonlinear multi-fidelity model
-
-plt.figure(figsize=(12,8))
-plt.fill_between(x_plot.flatten(), (lf_mean_nonlin_mf_model - 1.96*lf_std_nonlin_mf_model).flatten(), 
-                 (lf_mean_nonlin_mf_model + 1.96*lf_std_nonlin_mf_model).flatten(), color='g', alpha=0.3)
-plt.fill_between(x_plot.flatten(), (hf_mean_nonlin_mf_model - 1.96*hf_std_nonlin_mf_model).flatten(), 
-                 (hf_mean_nonlin_mf_model + 1.96*hf_std_nonlin_mf_model).flatten(), color='y', alpha=0.3)
-plt.plot(x_plot, y_plot_l, 'b')
-plt.plot(x_plot, y_plot_h, 'r')
-plt.plot(x_plot, lf_mean_nonlin_mf_model, '--', color='g')
-plt.plot(x_plot, hf_mean_nonlin_mf_model, '--', color='y')
-plt.scatter(x_train_h, y_train_h, color='r')
-plt.scatter(x_train_l, y_train_l, color='b')
-plt.xlabel('x')
-plt.ylabel('f (x)')
-plt.xlim(0, 1)
-plt.legend(['Low Fidelity', 'High Fidelity', 'Predicted Low Fidelity', 'Predicted High Fidelity'])
-plt.title('Nonlinear multi-fidelity model fit to low and high fidelity functions')
-plt.show()
+# ## Compute mean and variance predictions
+# 
+# hf_mean_nonlin_mf_model, hf_var_nonlin_mf_model = nonlin_mf_model.predict(X_plot_high)
+# hf_std_nonlin_mf_model = np.sqrt(hf_var_nonlin_mf_model)
+# 
+# lf_mean_nonlin_mf_model, lf_var_nonlin_mf_model = nonlin_mf_model.predict(X_plot_low)
+# lf_std_nonlin_mf_model = np.sqrt(lf_var_nonlin_mf_model)
+# 
+# 
+# ## Plot posterior mean and variance of nonlinear multi-fidelity model
+# 
+# plt.figure(figsize=(12,8))
+# plt.fill_between(x_plot.flatten(), (lf_mean_nonlin_mf_model - 1.96*lf_std_nonlin_mf_model).flatten(), 
+#                  (lf_mean_nonlin_mf_model + 1.96*lf_std_nonlin_mf_model).flatten(), color='g', alpha=0.3)
+# plt.fill_between(x_plot.flatten(), (hf_mean_nonlin_mf_model - 1.96*hf_std_nonlin_mf_model).flatten(), 
+#                  (hf_mean_nonlin_mf_model + 1.96*hf_std_nonlin_mf_model).flatten(), color='y', alpha=0.3)
+# plt.plot(x_plot, y_plot_l, 'b')
+# plt.plot(x_plot, y_plot_h, 'r')
+# plt.plot(x_plot, lf_mean_nonlin_mf_model, '--', color='g')
+# plt.plot(x_plot, hf_mean_nonlin_mf_model, '--', color='y')
+# plt.scatter(x_train_h, y_train_h, color='r')
+# plt.scatter(x_train_l, y_train_l, color='b')
+# plt.xlabel('x')
+# plt.ylabel('f (x)')
+# plt.xlim(0, 1)
+# plt.legend(['Low Fidelity', 'High Fidelity', 'Predicted Low Fidelity', 'Predicted High Fidelity'])
+# plt.title('Nonlinear multi-fidelity model fit to low and high fidelity functions')
+# plt.show()
