@@ -38,6 +38,8 @@ for factor in range(len(bounds)):
     u = {"type": "ineq", "fun": lambda x, ub=upper, i=factor: ub - x[i]}
     cons.append(l)
     cons.append(u)
+    
+cons.append({'type': 'ineq', 'fun' : lambda x: mfrobo_inst.fake_con(x)})
 
 res = minimize(
     mfrobo_inst.obj_func,

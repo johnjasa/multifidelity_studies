@@ -42,4 +42,6 @@ plt.xlim([0., 1.])
 plt.xlabel('Design variable, x')
 plt.ylabel('Function output, y')
 
+plt.tight_layout()
 plt.show()
+# plt.savefig('simple_mfrobo.png', dpi=600)

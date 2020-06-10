@@ -44,11 +44,14 @@ class BaseMCClass:
         self.num_fidelities = len(funcs)
 
         self.fB = np.zeros((0, self.num_fidelities))
+        self.Con = np.zeros((0, self.num_fidelities))
 
         # Store history parameters
         self.D_all = []
         self.mfB = []
         self.vfB = []
+        self.mCon = []
+        self.vCon = []
         self.m_star_all = []
         self.rhofB_all = []
         self.qfB_all = []
@@ -182,12 +185,16 @@ class BaseMCClass:
 
     def query_functions(self, X, funcs, DX, m_star):
         new_fB = np.zeros((np.max(m_star), self.num_fidelities))
+        new_Con = np.zeros((np.max(m_star), self.num_fidelities))
 
         for j, m in enumerate(m_star):
             func = funcs[j]
             for i in range(m):
                 if m > 0:
                     new_fB[i, j] = func(DX) + func(X[i]) / 2. + (np.random.random() - 0.5) / 2.
+                    new_Con[i, j] = DX - 0.4 - X[i]
 
         self.fB = np.vstack((self.fB, new_fB))
+        self.Con = np.vstack((self.Con, new_Con))
+        
         print()

@@ -23,31 +23,6 @@ class MFROBO(BaseMCClass):
         # Save the current design to the all-design list
         self.D_all.append(Din)
 
-        # # Check if the design is within bounds
-        # if (np.sum(Din-self.X_bounds[0]<0)>0) or (np.sum(Din-self.X_bounds[1]>0)>0):
-        #     print('Design is outside the bounds')
-        #     print(Din)
-        #     # Assigning large values to the objective function
-        #     mfB = 1e3
-        #     vfB = 1e2
-        #     mSF = 1e1
-        #     vSF = 1e1
-        #     mLC = 1e1
-        #     vLC = 1e1
-        #     mCM = 1e1
-        #     vCM = 1e1
-        #     self.mfB.append(mfB)
-        #     self.vfB.append(vfB)
-        #     self.mSF.append(mSF)
-        #     self.vSF.append(vSF)
-        #     self.mLC.append(mLC)
-        #     self.vLC.append(vLC)
-        #     self.mCM.append(mCM)
-        #     self.vCM.append(vCM)
-        #     self.p_all.append(0.)
-        # else:
-
-        # Start with all fidelities; delete later if necessary
         funcs = self.funcs.copy()
 
         # Define time taken to run each fidelity
@@ -86,6 +61,11 @@ class MFROBO(BaseMCClass):
         sig2fB = np.zeros(self.num_fidelities)
         qfB = np.zeros(self.num_fidelities + 1)
         tau2fB = np.zeros(self.num_fidelities)
+        
+        rhoCon = np.zeros(self.num_fidelities + 1)
+        sig2Con = np.zeros(self.num_fidelities)
+        qCon = np.zeros(self.num_fidelities + 1)
+        tau2Con = np.zeros(self.num_fidelities)
 
         m_star = np.ones((self.num_fidelities), dtype=int) * nbXsamp
 
@@ -110,6 +90,16 @@ class MFROBO(BaseMCClass):
                 * (self.fB[:, i] - np.mean(self.fB[:, i])) ** 2
             )
 
+
+            # Sample correlation coefficient wrt highest fidelity
+            rhoCon[i] = np.corrcoef(self.Con[:,0], self.Con[:,i])[0,1]
+            # Sample Variance of each fidelity
+            sig2Con[i] = np.var(self.Con[:,i])
+
+            # Sample correlation coefficient for variance samples (change of variable) wrt highest fidelity
+            qCon[i] = np.corrcoef((nbXsamp/(nbXsamp-1))*(self.Con[:,0]-np.mean(self.Con[:,0]))**2, (nbXsamp/(nbXsamp-1))*(self.Con[:,i]-np.mean(self.Con[:,i]))**2)[0,1]
+            # Sample variance for variance samples (change of variable)
+            tau2Con[i] = np.var((nbXsamp/(nbXsamp-1))*(self.Con[:,i]-np.mean(self.Con[:,i]))**2)
         print("correlation coeffs:")
         print(rhofB)
         self.rhofB_all.append(rhofB)
@@ -154,6 +144,10 @@ class MFROBO(BaseMCClass):
         # Optimal control variate coefficients
         alpha_s = rhofB[:-1] * sig2fB[0] ** 0.5 / sig2fB ** 0.5  # For mean estimate
         beta_s = qfB[:-1] * tau2fB[0] ** 0.5 / tau2fB ** 0.5  # For variance estimate
+        
+        # For constraints
+        alpha_Con = rhoCon[:-1] * sig2Con[0]**0.5 / sig2Con**0.5 # For mean estimate
+        beta_Con = qCon[:-1] * tau2Con[0]**0.5 / tau2Con**0.5    # For variance estimate
 
         # Given tolerance for total variance Jstar, find required budget
         p = (np.sum(w * r) * (sig2fB[0] + tau2fB[0] + s_p)) / self.J_star
@@ -191,12 +185,16 @@ class MFROBO(BaseMCClass):
         # Finding the mean and variance estimates using MFMC
         # For highest fidelity
         mfB = np.mean(self.fB[: m_star[0], 0])
+        mCon = np.mean(self.Con[:m_star[0],0])
 
         # Change of variable for variance estimate
         var_samp = (m_star[0] / (m_star[0] - 1)) * (
             self.fB[: m_star[0], 0] - np.mean(self.fB[: m_star[0], 0])
         ) ** 2
         vfB = np.mean(var_samp)
+        
+        var_sampCon = (m_star[0]/(m_star[0]-1))*(self.Con[:m_star[0],0]-np.mean(self.Con[:m_star[0],0]))**2
+        vCon = np.mean(var_sampCon)
 
         for i in np.arange(1, self.num_fidelities):
             # For lower fidelities: control variates
@@ -211,9 +209,17 @@ class MFROBO(BaseMCClass):
                 self.fB[: m_star[i - 1], i] - np.mean(self.fB[: m_star[i - 1], i])
             ) ** 2
             vfB = vfB + beta_s[i] * (np.mean(var_samp1) - np.mean(var_samp2))
+            
+            mCon = mCon + alpha_Con[i]*(np.mean(self.Con[:m_star[i],i]) - np.mean(self.Con[:m_star[i-1],i]))
+            # Change of variable for variance estimate
+            var_samp1Con = (m_star[i]/(m_star[i]-1))*(self.Con[:m_star[i],i] - np.mean(self.Con[:m_star[i],i]))**2
+            var_samp2Con = (m_star[i-1]/(m_star[i-1]-1))*(self.Con[:m_star[i-1],i] - np.mean(self.Con[:m_star[i-1]+1,i]))**2
+            vCon = vCon + beta_Con[i]*(np.mean(var_samp1Con) - np.mean(var_samp2Con))
 
         self.mfB.append(mfB)
         self.vfB.append(vfB)
+        self.mCon.append(mCon)
+        self.vCon.append(vCon)
         self.fB_all.append(self.fB)
 
     def master_func(self, Din):
@@ -244,11 +250,15 @@ class MFROBO(BaseMCClass):
         if run_case:
             # Clear out the results from a previous design point
             self.fB = np.zeros((0, self.num_fidelities))
+            self.Con = np.zeros((0, self.num_fidelities))
 
             self.MFMC(Din)
 
             # Robust optimization objective
             idx = -1
+            
+        else:
+            print('Skipping; case already ran')
 
         return idx
 
@@ -264,3 +274,11 @@ class MFROBO(BaseMCClass):
             RO_obj = 1e10
             
         return RO_obj
+        
+    def fake_con(self, Din):
+
+        idx = self.master_func(Din)
+        Con_con = self.mCon[idx] + self.eta*self.vCon[idx]**0.5
+
+        print('Con con', Con_con)
+        return Con_con
