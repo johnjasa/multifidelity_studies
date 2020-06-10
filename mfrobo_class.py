@@ -16,11 +16,9 @@ np.random.seed(31415)
 class MFROBO(BaseMCClass):
     def MFMC(self, Din):
 
-        # print('do not quit the program yet!')
-        # # Output all current results
-        # with open(self.output_filename, 'wb') as f:
-        #     dill.dump(self, f)
-        # print('you may quit the program now')
+        # Output all current results
+        with open(self.output_filename, 'wb') as f:
+            dill.dump(self, f)
 
         # Save the current design to the all-design list
         self.D_all.append(Din)
@@ -91,12 +89,7 @@ class MFROBO(BaseMCClass):
 
         m_star = np.ones((self.num_fidelities), dtype=int) * nbXsamp
 
-        # Run python code to get fuelburn: one design variable at a time
-        try:
-            self.query_functions(X, funcs, Din, m_star)
-            fail = False
-        except AnalysisError:  # if the aero solve fails due to nans, throw out the design
-            fail = True
+        self.query_functions(X, funcs, Din, m_star)
 
         for i in range(self.num_fidelities):
             # Sample correlation coefficient wrt highest fidelity
@@ -223,6 +216,7 @@ class MFROBO(BaseMCClass):
 
         self.mfB.append(mfB)
         self.vfB.append(vfB)
+        self.fB_all.append(self.fB)
 
     def master_func(self, Din):
         """

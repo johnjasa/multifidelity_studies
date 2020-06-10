@@ -13,20 +13,33 @@ np.random.seed(314)
 # Fidelity parameters
 funcs = [simple_1D_high, simple_1D_medium, simple_1D_low]
 
-Din = np.array([0.2])
+Din = np.array([0.5])
 
 Ex_stdx = OrderedDict()
 
-Ex_stdx["dummy"] = (0.0, 0.1)
+Ex_stdx["dummy"] = (0.0, 0.02)
 
 # Weight for variance in the objective function
-eta = 0
+eta = 3
 
 # Target MSE for moment estimates
-J_star = 1e-3
+J_star = 1e-1
 
-mfrobo_inst = MFROBO(funcs, Ex_stdx, eta, J_star, "out2.pkl")
+mfrobo_inst = MFROBO(funcs, Ex_stdx, eta, J_star, "mfrobo_out.pkl")
 mfrobo_inst.t_DinT = np.array([0.5, 0.1, 0.05])
+
+bounds=[(0.0, 1.0)]
+
+#construct the bounds in the form of constraints
+cons = []
+for factor in range(len(bounds)):
+    lower, upper = bounds[factor]
+    l = {'type': 'ineq',
+         'fun': lambda x, lb=lower, i=factor: x[i] - lb}
+    u = {'type': 'ineq',
+         'fun': lambda x, ub=upper, i=factor: ub - x[i]}
+    cons.append(l)
+    cons.append(u)
 
 res = minimize(
     mfrobo_inst.obj_func,
@@ -34,5 +47,6 @@ res = minimize(
     args=(),
     method="COBYLA",
     tol=1e-10,
-    options={"disp": True, "maxiter": 1000, "rhobeg": 0.1},
+    constraints=cons,
+    options={"disp": True, "maxiter": 1000, "rhobeg": 0.5},
 )

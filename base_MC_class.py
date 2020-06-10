@@ -53,6 +53,7 @@ class BaseMCClass:
         self.rhofB_all = []
         self.qfB_all = []
         self.p_all = []
+        self.fB_all = []
 
         self.scaler = 1e3
         self.maxbudget = 500 * 0.47416563  # 500 HF evaluations
@@ -196,7 +197,7 @@ class BaseMCClass:
             func = funcs[j]
             for i in range(m):
                 if m > 0:
-                    new_fB[i, j] = func(DX + X[i])
+                    new_fB[i, j] = func(DX) + func(X[i]) / 2.
 
         self.fB = np.vstack((self.fB, new_fB))
         print()
