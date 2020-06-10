@@ -20,10 +20,10 @@ Ex_stdx = OrderedDict()
 Ex_stdx["dummy"] = (0.0, 0.1)
 
 # Weight for variance in the objective function
-eta = 3
+eta = 0
 
 # Target MSE for moment estimates
-J_star = 1e-1
+J_star = 1e-3
 
 mfrobo_inst = MFROBO(funcs, Ex_stdx, eta, J_star, "out2.pkl")
 mfrobo_inst.t_DinT = np.array([0.5, 0.1, 0.05])
@@ -33,6 +33,6 @@ res = minimize(
     Din,
     args=(),
     method="COBYLA",
-    tol=1e-5,
+    tol=1e-10,
     options={"disp": True, "maxiter": 1000, "rhobeg": 0.1},
 )

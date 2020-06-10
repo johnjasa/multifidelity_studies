@@ -138,23 +138,22 @@ class MFROBO(BaseMCClass):
 
         for i in np.arange(1, self.num_fidelities):
             # Optimal Allocation
-            r[i] = (
-                (
-                    w[0]
-                    * (
-                        sig2fB[0] * (rhofB[i] ** 2 - rhofB[i + 1] ** 2)
-                        + tau2fB[0] * (qfB[i] ** 2 - qfB[i + 1] ** 2)
-                    )
-                )
-                / (
-                    w[i]
-                    * (sig2fB[0] * (1 - rhofB[1] ** 2) + tau2fB[0] * (1 - qfB[1] ** 2))
-                )
-            ) ** 0.5
-
-            s_p = s_p + (1 / r[i] - 1 / r[i - 1]) * (
-                rhofB[i] ** 2 * sig2fB[0] + qfB[i] ** 2 * tau2fB[0]
+            term1 = w[0] * (
+                sig2fB[0] * (rhofB[i] ** 2 - rhofB[i + 1] ** 2)
+                + tau2fB[0] * (qfB[i] ** 2 - qfB[i + 1] ** 2)
             )
+            term2 = w[i] * (
+                sig2fB[0] * (1 - rhofB[1] ** 2) + tau2fB[0] * (1 - qfB[1] ** 2)
+            )
+            r[i] = np.divide(term1, term2, out=np.zeros_like(term1), where=term2!=0)
+            if r[i] < 0.:
+                r[i] = 0.01  # TODO : this probably isn't correct
+            else:
+                r[i] = r[i] ** 0.5
+                
+                s_p = s_p + (1 / r[i] - 1 / r[i - 1]) * (
+                    rhofB[i] ** 2 * sig2fB[0] + qfB[i] ** 2 * tau2fB[0]
+                )
 
         ############################################################################
         # Find mean and variance using MFMC
@@ -268,4 +267,8 @@ class MFROBO(BaseMCClass):
 
         print("Design", Din)
         print("ObjFun", RO_obj)
+        
+        if np.isnan(RO_obj):
+            RO_obj = 1e10
+            
         return RO_obj
