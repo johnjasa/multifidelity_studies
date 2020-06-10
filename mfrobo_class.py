@@ -168,8 +168,6 @@ class MFROBO(BaseMCClass):
         m_star[0] = p / np.sum(w * r)
         m_star[1:] = m_star[0] * r[1:]
 
-        self.m_star_all.append(np.array(np.ceil(m_star), dtype=int))
-
         # Take out the initial number of samples already used for sample estimates of rho, sig, q, tau
         m_star = np.ceil(m_star) - nbXsamp
         m_star[m_star < 0] = 0
@@ -188,7 +186,7 @@ class MFROBO(BaseMCClass):
         self.query_functions(X, relevant_funcs, Din, m_star)
 
         m_star = m_star + nbXsamp  # Adding back the initial samples
-        # self.m_star_all.append(m_star)
+        self.m_star_all.append(np.array(np.ceil(m_star), dtype=int))
 
         # Finding the mean and variance estimates using MFMC
         # For highest fidelity

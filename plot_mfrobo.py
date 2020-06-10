@@ -1,10 +1,5 @@
-from __future__ import print_function
 import numpy as np
-from scipy.stats import truncnorm
-
-from time import time
 import dill
-import pyDOE
 import matplotlib.pyplot as plt
 from testbed_components import simple_1D_low, simple_1D_medium, simple_1D_high
 
@@ -44,5 +39,7 @@ for i, func_vals in enumerate(mfrobo.fB_all):
             )
 
 plt.xlim([0., 1.])
+plt.xlabel('Design variable, x')
+plt.ylabel('Function output, y')
 
 plt.show()

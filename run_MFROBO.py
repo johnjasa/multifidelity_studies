@@ -25,19 +25,17 @@ eta = 3
 # Target MSE for moment estimates
 J_star = 1e-1
 
-mfrobo_inst = MFROBO(funcs, Ex_stdx, eta, J_star, "mfrobo_out.pkl")
-mfrobo_inst.t_DinT = np.array([0.5, 0.1, 0.05])
+mfrobo_inst = MFROBO(funcs, Ex_stdx, eta, J_star, "mfrobo_out.pkl", nbXsamp=5)
+mfrobo_inst.t_DinT = np.array([50., 0.1, 0.05])
 
-bounds=[(0.0, 1.0)]
+bounds = [(0.0, 1.0)]
 
-#construct the bounds in the form of constraints
+# construct the bounds in the form of constraints
 cons = []
 for factor in range(len(bounds)):
     lower, upper = bounds[factor]
-    l = {'type': 'ineq',
-         'fun': lambda x, lb=lower, i=factor: x[i] - lb}
-    u = {'type': 'ineq',
-         'fun': lambda x, ub=upper, i=factor: ub - x[i]}
+    l = {"type": "ineq", "fun": lambda x, lb=lower, i=factor: x[i] - lb}
+    u = {"type": "ineq", "fun": lambda x, ub=upper, i=factor: ub - x[i]}
     cons.append(l)
     cons.append(u)
 
@@ -46,7 +44,7 @@ res = minimize(
     Din,
     args=(),
     method="COBYLA",
-    tol=1e-10,
+    tol=1e-8,
     constraints=cons,
-    options={"disp": True, "maxiter": 1000, "rhobeg": 0.5},
+    options={"disp": True, "maxiter": 1000, "rhobeg": 0.4},
 )

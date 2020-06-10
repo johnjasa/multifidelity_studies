@@ -180,16 +180,6 @@ class BaseMCClass:
         print()
         print()
 
-        counter = 0
-        for i, D in enumerate(D_list):
-            fB = fB_list[i]
-            if np.any(fB > 100.0) or np.any(fB < 0.0):
-                counter += 1
-                print()
-                print(i, D)
-                print(fB)
-        print(counter, " bad cases")
-
     def query_functions(self, X, funcs, DX, m_star):
         new_fB = np.zeros((np.max(m_star), self.num_fidelities))
 
@@ -197,7 +187,7 @@ class BaseMCClass:
             func = funcs[j]
             for i in range(m):
                 if m > 0:
-                    new_fB[i, j] = func(DX) + func(X[i]) / 2.
+                    new_fB[i, j] = func(DX) + func(X[i]) / 2. + (np.random.random() - 0.5) / 2.
 
         self.fB = np.vstack((self.fB, new_fB))
         print()
