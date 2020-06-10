@@ -8,7 +8,7 @@ import pyDOE
 
 class BaseMCClass():
 
-    def __init__(self, FPtot, Ex_stdx, eta, J_star, output_filename, X_bounds=None, nbXsamp=20, num_timing_samples=101, useHFonly=True, scaleVar_option=True, rad_IR=0):
+    def __init__(self, funcs, Ex_stdx, eta, J_star, output_filename, X_bounds=None, nbXsamp=5, num_timing_samples=101, useHFonly=True, scaleVar_option=True, rad_IR=0):
 
         self.Ex_stdx = Ex_stdx
         self.eta = eta
@@ -23,9 +23,9 @@ class BaseMCClass():
         self.rad_IR = rad_IR    # radius of hypersphere to consider using information reuse
         # self.X_fixed = X_fixed  # fixed set of samples used for all designs for information reuse
 
-        self.FPtot = FPtot
-        self.num_fidelities = FPtot.shape[0]
-
+        self.funcs = funcs
+        self.num_fidelities = len(funcs)
+        
         self.fB = np.zeros((0, self.num_fidelities))
 
         # Store history parameters
@@ -33,7 +33,6 @@ class BaseMCClass():
         self.mfB = []
         self.vfB = []
         self.m_star_all = []
-        self.FP_all = []
         self.rhofB_all = []
         self.qfB_all = []
         self.p_all = []
@@ -42,6 +41,9 @@ class BaseMCClass():
         self.maxbudget = 500*0.47416563 # 500 HF evaluations
 
     def getFPTimings(self):
+        """
+        I don't think this is set up correctly as-is
+        """
 
         Ex_stdx = self.Ex_stdx
 
@@ -74,16 +76,16 @@ class BaseMCClass():
         Din = np.random.uniform(lb, ub, (nt, 7))
         m_star = np.ones(1, dtype=int) * nt
 
-        self.time_diff = np.zeros((self.FPtot.shape[0], 2))
+        self.time_diff = np.zeros((self.num_fidelities, 2))
         for j, m_star_version in enumerate([m_star, np.ones((1), dtype=int)]):
             for i, FP in enumerate(self.FPtot):
                 FP = np.atleast_2d(FP)
-                self.fB = np.zeros((nt,FP.shape[0]))
-                self.SF = np.zeros((nt,FP.shape[0]))
-                self.LC = np.zeros((nt,FP.shape[0]))
-                self.CM = np.zeros((nt,FP.shape[0]))
+                self.fB = np.zeros((nt, self.num_fidelities))
+                self.SF = np.zeros((nt, self.num_fidelities))
+                self.LC = np.zeros((nt, self.num_fidelities))
+                self.CM = np.zeros((nt, self.num_fidelities))
                 s = time()
-                self.runAeroStruct(X, FP, Din[0, :], m_star_version)
+                self.query_functions(X, FP, Din[0, :], m_star_version)
                 self.time_diff[i, j] = time() - s
 
         timings = (self.time_diff[:, 0] - self.time_diff[:, 1]) / (nt - 1)
@@ -142,7 +144,7 @@ class BaseMCClass():
             self.SF = np.zeros((0, self.num_fidelities))
             self.LC = np.zeros((0, self.num_fidelities))
             self.CM = np.zeros((0, self.num_fidelities))
-            self.runAeroStruct(X, self.FPtot, Din, m_star)
+            self.query_functions(X, self.FPtot, Din, m_star)
 
             D_list.append(Din)
             fB_list.append(self.fB)
@@ -160,20 +162,17 @@ class BaseMCClass():
                 print(fB)
         print(counter, ' bad cases')
 
-    def runAeroStruct(self, X, FP, DX, m_star):
+    def query_functions(self, X, funcs, DX, m_star):
 
         print(DX)
 
-        new_fB = np.zeros((m_star[-1], FP.shape[0]))
+        new_fB = np.zeros((np.max(m_star), self.num_fidelities))
 
         for j, m in enumerate(m_star):
-            if m > 0:
-
-                # Loop through each random variable
-                for i in range(m):
-                    # Design variable
-
-                    new_fB[i, j] = 1. + np.random.random()
+            func = funcs[j]
+            for i in range(m):
+                if m > 0:
+                    new_fB[i, j] = func(DX + X[i])
                     
         self.fB = np.vstack((self.fB, new_fB))
         print()
