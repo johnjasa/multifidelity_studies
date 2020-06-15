@@ -35,7 +35,7 @@ for i, func_vals in enumerate(mfrobo.fB_all):
         obj_vals = func_vals[:num_calls, j]
         if num_calls > 0:
             plt.scatter(
-                np.ones(num_calls) * design_vector, obj_vals, color=colors[j], alpha=0.3
+                np.ones(num_calls) * design_vector, obj_vals, color=colors[j], alpha=0.3, linewidths=0.,
             )
 
 plt.xlim([0., 1.])
@@ -43,5 +43,5 @@ plt.xlabel('Design variable, x')
 plt.ylabel('Function output, y')
 
 plt.tight_layout()
-plt.show()
-# plt.savefig('simple_mfrobo.png', dpi=600)
+plt.savefig('simple_mfrobo.png', dpi=600)
+# plt.show()

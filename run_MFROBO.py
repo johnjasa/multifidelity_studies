@@ -39,7 +39,7 @@ for factor in range(len(bounds)):
     cons.append(l)
     cons.append(u)
     
-cons.append({'type': 'ineq', 'fun' : lambda x: mfrobo_inst.fake_con(x)})
+# cons.append({'type': 'ineq', 'fun' : lambda x: mfrobo_inst.fake_con(x)})
 
 res = minimize(
     mfrobo_inst.obj_func,
@@ -48,5 +48,5 @@ res = minimize(
     method="COBYLA",
     tol=1e-8,
     constraints=cons,
-    options={"disp": True, "maxiter": 1000, "rhobeg": 0.4},
+    options={"disp": True, "maxiter": 1000, "rhobeg": 0.1},
 )
