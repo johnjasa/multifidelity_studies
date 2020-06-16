@@ -16,6 +16,15 @@ def simple_1D_medium(x):
     
 def simple_1D_low(x):
     return (6 * x - 2) ** 2 * np.sin(12 * x - 4)
+    
+
+def simple_2D_high(x):
+    term1 = A * (6 * x[1] - 2) ** 2 * np.sin(12 * x[0] - 4)
+    term2 = B * (x[0] - 0.5)
+    return term1 + term2 + C
+    
+def simple_2D_low(x):
+    return (6 * x[1] - 2) ** 2 * np.sin(12 * x[0] - 4)
 
 
 class simple_1D(om.ExplicitComponent):
