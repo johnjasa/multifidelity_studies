@@ -5,6 +5,8 @@ import openmdao.api as om
 from testbed_components import simple_1D_low, simple_1D_high
 
 
+np.random.seed(314)
+
 mm = om.MultiFiMetaModelUnStructuredComp(nfi=2)
 mm.add_input('x', np.zeros((1, )))
 mm.add_output('y', np.zeros((1, )))
@@ -30,14 +32,15 @@ prob['x'] = 0.8
 
 s = time()
 
-num_high = 11
-num_low = 12
-
-x_low = np.linspace(0., 1., num_low)
-y_low = simple_1D_low(x_low)
+num_high = 5
+num_low = 11
 
 x_high = np.linspace(0., 1., num_high)
 y_high = simple_1D_high(x_high)
+
+x_low = np.hstack((x_high, np.random.rand(num_low-num_high)))
+y_low = simple_1D_low(x_low)
+
 
 mm.options['train:x'] = x_high
 mm.options['train:y'] = y_high
