@@ -18,16 +18,17 @@ colors = [
 ]
 
 funcs = [simple_1D_high, simple_1D_medium, simple_1D_low]
+labels = ['High fidelity', 'Medium fidelity', 'Low fidelity']
 
 filename = "mfrobo_out.pkl"
 
 with open(filename, "rb") as f:
     mfrobo = dill.load(f)
 
-plt.figure()
+plt.figure(figsize=(6, 4))
 x = np.linspace(0.0, 1.0, 201)
 for j, func in enumerate(funcs):
-    plt.plot(x, func(x) + func(0) / 2.0, color=colors[j])
+    plt.plot(x, func(x) + func(0) / 2.0, color=colors[j], label=labels[j])
 
 for i, func_vals in enumerate(mfrobo.fB_all):
     design_vector = mfrobo.D_all[i]
@@ -41,6 +42,8 @@ for i, func_vals in enumerate(mfrobo.fB_all):
 plt.xlim([0., 1.])
 plt.xlabel('Design variable, x')
 plt.ylabel('Function output, y')
+
+plt.legend()
 
 plt.tight_layout()
 plt.savefig('simple_mfrobo.png', dpi=600)

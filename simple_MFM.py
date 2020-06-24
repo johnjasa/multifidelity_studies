@@ -38,21 +38,21 @@ for i in range(20):
         input_arrays = [x.flatten() for x in input_arrays]
         return func_low(x) + e(*input_arrays)
 
-    # n_plot = 101
-    # x_plot = np.linspace(0., 1., n_plot)
-    # X, Y = np.meshgrid(x_plot, x_plot)
-    # 
-    # x_values = np.vstack((X.flatten(), Y.flatten()))
-    # # surrogate = m(x_values).reshape(n_plot, n_plot)
-    # # y_plot_low = func_low(x_values).reshape(n_plot, n_plot)
-    # y_plot_high = func_high(x_values).reshape(n_plot, n_plot)
-    # 
-    # plt.figure()
-    # # plt.contourf(X, Y, surrogate, label='mixed surrogate')
-    # # plt.contourf(X, Y, y_plot_low, label='low')
-    # plt.contourf(X, Y, y_plot_high, label='high')
-    # plt.scatter(x[0], x[1], color='k')
-    # plt.show()
+    n_plot = 101
+    x_plot = np.linspace(0., 1., n_plot)
+    X, Y = np.meshgrid(x_plot, x_plot)
+    
+    x_values = np.vstack((X.flatten(), Y.flatten()))
+    # surrogate = m(x_values).reshape(n_plot, n_plot)
+    # y_plot_low = func_low(x_values).reshape(n_plot, n_plot)
+    y_plot_high = func_high(x_values).reshape(n_plot, n_plot)
+    
+    plt.figure()
+    # plt.contourf(X, Y, surrogate, label='mixed surrogate')
+    # plt.contourf(X, Y, y_plot_low, label='low')
+    plt.contourf(X, Y, y_plot_high, label='high')
+    plt.scatter(x[0], x[1], color='k')
+    plt.show()
     
 
     x0 = x[:, -1]

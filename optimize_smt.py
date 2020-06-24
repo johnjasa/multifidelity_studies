@@ -9,7 +9,7 @@ from testbed_components import simple_1D_low, simple_1D_high
 # Problem set up
 xlimits = np.array([[0.0, 1.0]])
 xdoes = NestedLHS(nlevel=2, xlimits=xlimits)
-xt_c, xt_e = xdoes(5)
+xt_c, xt_e = xdoes(4)
 
 # Evaluate the HF and LF functions
 yt_e = simple_1D_high(xt_e)
