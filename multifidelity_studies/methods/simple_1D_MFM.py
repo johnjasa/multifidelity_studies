@@ -2,7 +2,7 @@ import numpy as np
 from scipy.interpolate import Rbf
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
-from testbed_components import simple_1D_low, simple_1D_high
+from multifidelity_studies.models.testbed_components import simple_1D_low, simple_1D_high
 
 
 # Following Algo 2.1 from Andrew March's dissertation

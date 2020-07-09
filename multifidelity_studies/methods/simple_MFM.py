@@ -2,8 +2,8 @@ import numpy as np
 from scipy.interpolate import Rbf
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
-from testbed_components import simple_2D_low, simple_2D_high
 from traceback import print_exc
+from multifidelity_studies.models.testbed_components import simple_2D_low, simple_2D_high
 
 
 # Following Algo 2.1 from Andrew March's dissertation
