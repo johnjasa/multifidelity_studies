@@ -3,7 +3,7 @@ from scipy.interpolate import Rbf
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from traceback import print_exc
-from models.run_functions import CCBlade, OpenFAST
+from multifidelity_studies.models.run_functions import CCBlade, OpenFAST
 
 
 n_dims = 2
@@ -15,7 +15,7 @@ lofi_function = CC.run_vec
 hifi_function = OF.run_vec
 
 # Following Algo 2.1 from Andrew March's dissertation
-np.random.seed(111)
+np.random.seed(11)
 
 x_init = np.random.rand(3, n_dims) + 0.5
 x = x_init.copy()
@@ -45,7 +45,7 @@ for i in range(21):
         print('desvar: ', x)
         return -(lofi_function(np.atleast_2d(x)) + e(*x))
         
-    n_plot = 5
+    n_plot = 9
     x_plot = np.linspace(0.5, 1.5, n_plot)
     X, Y = np.meshgrid(x_plot, x_plot)
     

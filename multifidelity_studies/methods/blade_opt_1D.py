@@ -2,7 +2,7 @@ import numpy as np
 from scipy.interpolate import Rbf
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
-from models.run_functions import CCBlade, OpenFAST
+from multifidelity_studies.models.run_functions import CCBlade, OpenFAST
 
 
 CC = CCBlade('cc_results.pkl')
@@ -56,7 +56,7 @@ for i in range(21):
     plt.xlim([0.5, 1.5])
     plt.ylim([0.4, 0.5])
     plt.legend()
-    plt.savefig(f'image_{i}.png')
+    plt.savefig(f'image_1D_{i}.png')
     
 
     x0 = x[-1]

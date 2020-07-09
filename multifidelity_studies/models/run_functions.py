@@ -50,10 +50,12 @@ class BaseModel():
             for (key_1, value_1), (key_2, value_2) in zip(desvars.items(), saved_dict.items()):
                 if not np.all(value_1 == value_2):
                     same_dict = False
+                    break
                     
             if same_dict:
                 print('Loaded saved results!')
                 return self.saved_outputs[i]
+                
         return None
         
     def run_vec(self, chords):
