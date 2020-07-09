@@ -42,7 +42,16 @@ class BaseModel():
         
     def load_results(self, desvars):
         for i, saved_dict in enumerate(self.saved_desvars):
-            if desvars == saved_dict:
+            same_dict = True
+            
+            # Loop through the key/value pairs in each dictionary and see if they're
+            # all the exact same. If one is not the same, they are not the same dict,
+            # so we cannot use those saved results.
+            for (key_1, value_1), (key_2, value_2) in zip(desvars.items(), saved_dict.items()):
+                if not np.all(value_1 == value_2):
+                    same_dict = False
+                    
+            if same_dict:
                 print('Loaded saved results!')
                 return self.saved_outputs[i]
         return None

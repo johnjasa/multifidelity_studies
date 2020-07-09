@@ -37,8 +37,8 @@ for i in range(20):
     y_plot_high = simple_1D_high(x_plot)
 
     plt.figure()
-    plt.plot(x_plot, y_plot_low, label='low')
-    plt.plot(x_plot, y_plot_high, label='high')
+    plt.plot(x_plot, y_plot_low, label='low-fidelity')
+    plt.plot(x_plot, y_plot_high, label='high-fidelity')
     plt.plot(x_plot, surrogate, label='mixed surrogate')
     plt.scatter(x, y_high, color='k')
     
