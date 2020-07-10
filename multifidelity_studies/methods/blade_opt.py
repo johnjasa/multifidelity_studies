@@ -2,29 +2,36 @@ import numpy as np
 from scipy.interpolate import Rbf
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
+from collections import OrderedDict
 from traceback import print_exc
 from multifidelity_studies.models.run_functions import CCBlade, OpenFAST
 
 
-n_dims = 2
-
-CC = CCBlade('cc_results_nd.pkl')
-OF = OpenFAST('of_results_nd.pkl')
-
-lofi_function = CC.run_vec
-hifi_function = OF.run_vec
-
-# Following Algo 2.1 from Andrew March's dissertation
 np.random.seed(11)
 
-x_init = np.random.rand(3, n_dims) + 0.5
+n_dims = 2
+num_initial_points = 3
+
+x_init = np.random.rand(num_initial_points, n_dims) + 0.5
 x = x_init.copy()
 print()
 print(x_init)
 
+list_of_desvars = []
+for i in range(num_initial_points):
+    desvars = OrderedDict()
+    desvars['blade.opt_var.chord_opt_gain'] = x[i, :]
+    list_of_desvars.append(desvars)
+
+CC = CCBlade(desvars, 'cc_results_nd.pkl')
+OF = OpenFAST(desvars, 'of_results_nd.pkl')
+
+lofi_function = CC.run_vec
+hifi_function = OF.run_vec
+
 for i in range(21):
-    y_low = lofi_function(x)
-    y_high = hifi_function(x)
+    y_low = lofi_function(list_of_desvars)
+    y_high = hifi_function(list_of_desvars)
 
     # Construct RBF interpolater for error function
     differences = y_high - y_low
@@ -42,15 +49,21 @@ for i in range(21):
 
     # Create m_k = lofi + RBF
     def m(x):
-        print('desvar: ', x)
-        return -(lofi_function(np.atleast_2d(x)) + e(*x))
+        desvars = CC.unflatten_desvars(x)
+        return -(lofi_function([desvars]) + e(*x))
         
-    n_plot = 9
+    n_plot = 5
     x_plot = np.linspace(0.5, 1.5, n_plot)
     X, Y = np.meshgrid(x_plot, x_plot)
-    
     x_values = np.vstack((X.flatten(), Y.flatten())).T
-    y_plot_high = hifi_function(x_values).reshape(n_plot, n_plot)
+    
+    list_of_desvars_plot = []
+    for j in range(n_plot*n_plot):
+        desvars = OrderedDict()
+        desvars['blade.opt_var.chord_opt_gain'] = x_values[j]
+        list_of_desvars_plot.append(desvars)
+        
+    y_plot_high = hifi_function(list_of_desvars_plot).reshape(n_plot, n_plot)
 
     plt.figure()
     plt.contourf(X, Y, y_plot_high, label='high')
@@ -63,4 +76,8 @@ for i in range(21):
     x_new = np.atleast_2d(res.x)
     
     x = np.vstack((x, x_new))
+    
+    desvars = OrderedDict()
+    desvars['blade.opt_var.chord_opt_gain'] = x_new
+    list_of_desvars.append(desvars)
     

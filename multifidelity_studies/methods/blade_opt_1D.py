@@ -29,7 +29,6 @@ OF = OpenFAST(desvars, 'of_results.pkl')
 lofi_function = CC.run_vec
 hifi_function = OF.run_vec
 
-
 for i in range(21):
     y_low = lofi_function(list_of_desvars)
     y_high = hifi_function(list_of_desvars)
@@ -53,9 +52,9 @@ for i in range(21):
     
     list_of_desvars_plot = []
     surrogate = []
-    for i in range(21):
+    for j in range(21):
         desvars = OrderedDict()
-        desvars['blade.opt_var.chord_opt_gain'] = x_plot[i]
+        desvars['blade.opt_var.chord_opt_gain'] = x_plot[j]
         list_of_desvars_plot.append(desvars)
         surrogate.append(-m(x_plot))
         
