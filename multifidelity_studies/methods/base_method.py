@@ -39,7 +39,7 @@ class BaseMethod():
         # Create m_k = lofi + RBF
         self.approximation_function = approximation_function
         
-    def initialize_points(self, num_initial_points=3):
+    def initialize_points(self, num_initial_points=7):
         self.n_dims = 2
         
         x_init = np.random.rand(num_initial_points, self.n_dims)
@@ -59,22 +59,25 @@ class BaseMethod():
         x_values = np.vstack((X.flatten(), Y.flatten())).T
         
         list_of_desvars_plot = []
+        surrogate = np.zeros((n_plot*n_plot))
         for j in range(n_plot*n_plot):
             desvars = OrderedDict()
             desvars['x'] = x_values[j]
             list_of_desvars_plot.append(desvars)
+            surrogate[j] = self.approximation_function(x_values[j])
             
         y_plot_high = self.model_high.run_vec(list_of_desvars_plot).reshape(n_plot, n_plot)
+        # y_plot_high = surrogate.reshape(n_plot, n_plot)
     
         plt.figure()
-        plt.contourf(X, Y, y_plot_high)
+        plt.contourf(X, Y, y_plot_high, levels=101)
         plt.scatter(self.x[:, 0], self.x[:, 1], color='white')
         plt.show()
         
         
 class SimpleTrustRegion(BaseMethod):
     
-    def __init__(self, model_low, model_high, max_trust_radius=1000., eta=0.15, gtol=1e-4, trust_radius=0.1):
+    def __init__(self, model_low, model_high, max_trust_radius=1000., eta=0.15, gtol=1e-4, trust_radius=0.2):
         super().__init__(model_low, model_high)
         
         self.max_trust_radius = max_trust_radius
@@ -93,12 +96,7 @@ class SimpleTrustRegion(BaseMethod):
         
         bounds = list(zip(lower_bounds, upper_bounds))
         res = minimize(self.approximation_function, x0, method='SLSQP', tol=1e-6, bounds=bounds)
-        x_new = np.atleast_2d(res.x)
-        self.x = np.vstack((self.x, x_new))
-        
-        desvars = OrderedDict()
-        desvars['x'] = np.squeeze(x_new)
-        self.list_of_desvars.append(desvars)
+        x_new = res.x
         
         if np.any(np.abs(lower_bounds - x_new) < 1e-6) or np.any(np.abs(upper_bounds - x_new) < 1e-6):
             hits_boundary = True
@@ -109,41 +107,42 @@ class SimpleTrustRegion(BaseMethod):
     
     def update_trust_region(self, x_new, hits_boundary):
         # 3. Compute the ratio of actual improvement to predicted improvement
+        desvars = OrderedDict()
+        desvars['x'] = np.squeeze(x_new)
         
-        actual_reduction = self.model_high.run(self.list_of_desvars[-2]) - self.model_high.run(self.list_of_desvars[-1])
-        predicted_reduction = self.model_high.run(self.list_of_desvars[-2]) - self.approximation_function(self.x[-1, :])
+        actual_reduction = self.model_high.run(self.list_of_desvars[-1]) - self.model_high.run(desvars)
+        predicted_reduction = self.model_high.run(self.list_of_desvars[-1]) - self.approximation_function(x_new)
         
         # 4. Accept or reject the trial point according to that ratio
         if predicted_reduction <= 0:
-            print('not enough reduction! probably at a local optimum')
-            fail_flag = True
+            print('not enough reduction! rejecting point')
         else:
-            fail_flag = False
+            self.x = np.vstack((self.x, np.atleast_2d(x_new)))
+            self.list_of_desvars.append(desvars)
             
         rho = actual_reduction / predicted_reduction
     
         # 5. Update trust region according to rho_k
-        if rho < 0.25:
+        eta = 0.25
+        if rho < eta:
             self.trust_radius *= 0.25
-        elif rho > 0.75 and hits_boundary:
+        elif rho > eta:  #0.75 and hits_boundary:
             self.trust_radius = min(2*self.trust_radius, self.max_trust_radius)
+        print('trust radius', self.trust_radius)
             
-        return fail_flag
-        
     def optimize(self):
         self.construct_approximation()
         
         for i in range(10):
             x_new, hits_boundary = self.find_next_point()
             
-            fail_flag = self.update_trust_region(x_new, hits_boundary)
-            
-            if fail_flag:
-                break
+            self.update_trust_region(x_new, hits_boundary)
                 
-            self.construct_approximation()
-        
             print(self.x)
+            print(self.model_high.run_vec(self.list_of_desvars))
+            print()
+            
+            self.construct_approximation()
         
             self.plot_functions()
         

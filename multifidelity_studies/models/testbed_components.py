@@ -20,12 +20,14 @@ def simple_1D_low(x):
     
 
 def simple_2D_high(x):
-    term1 = A * (6 * x[1] - 2) ** 2# * np.sin(12 * x[0] - 4)
+    term1 = A * (6 * x[1] - 2) ** 2
     term2 = B * (x[0] - 0.5)
     return term1 + term2 + C
     
 def simple_2D_low(x):
-    return (6 * x[1] - 2) ** 2 + x[0] # * np.sin(12 * x[0] - 4)
+    term1 = A * (6 * x[1] - 2) ** 2
+    term2 = B * x[0]
+    return term1 + term2 + C
     
     
 class simple_2D_high_model(BaseModel):
