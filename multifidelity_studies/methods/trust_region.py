@@ -54,6 +54,16 @@ for i in range(10):
     bounds = [(max(x0 - trust_radius, 0.), min(1., x0 + trust_radius))]
     res = minimize(m, x0, method='SLSQP', tol=1e-6, bounds=bounds)
     x_new = res.x
+    
+    bounds = np.array(bounds)
+    lower_bounds = bounds[:, 0]
+    upper_bounds = bounds[:, 1]
+    
+    if np.any(np.abs(lower_bounds - x_new) < 1e-6) or np.any(np.abs(upper_bounds - x_new) < 1e-6):
+        hits_boundary = True
+    else:
+        hits_boundary = False
+    
     x = np.hstack((x, x_new))
     y_low = func_low(x)
     
@@ -71,11 +81,10 @@ for i in range(10):
         
     rho = actual_reduction / predicted_reduction
 
-    hits_boundary = False
     # 5. Update trust region according to rho_k
     if rho < 0.25:
         trust_radius *= 0.25
-    elif rho > 0.75:  # and hits_boundary:
+    elif rho > 0.75 and hits_boundary:
         trust_radius = min(2*trust_radius, max_trust_radius)
 
     # 6. Create a new model m_k+1 using Algo 2.2
