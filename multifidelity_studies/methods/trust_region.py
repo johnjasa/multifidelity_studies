@@ -34,8 +34,7 @@ trust_radius = 0.1
 # 1. Compute a step, s_k, that satisfies the fraction of Cauchy decrease requirement by solving:
 
 # Query hifi and lofi in same places
-x_all = np.random.rand(3)
-x = x_all
+x = np.random.rand(3)
 y_low = func_low(x)
 y_high = func_high(x)
 
