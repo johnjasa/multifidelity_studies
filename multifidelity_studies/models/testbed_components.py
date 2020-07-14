@@ -25,42 +25,22 @@ def simple_2D_high(x):
     return term1 + term2 + C
     
 def simple_2D_low(x):
-    term1 = A * (6 * x[1] - 2) ** 2
+    term1 = A * (4 * x[1] - 1) ** 2
     term2 = B * x[0]
-    return term1 + term2 + C
+    return term1 + term2
     
     
 class simple_2D_high_model(BaseModel):
     
     def run(self, desvars):
-        
-        loaded_results = self.load_results(desvars)
-        if loaded_results is None:
-            outputs = simple_2D_high(desvars['x'])
-            
-            self.save_results(desvars, outputs)
-            
-            return outputs
-            
-        else:
-            return loaded_results
+        return simple_2D_high(desvars['x'])
             
 
 class simple_2D_low_model(BaseModel):
     
     def run(self, desvars):
+        return simple_2D_low(desvars['x'])
         
-        loaded_results = self.load_results(desvars)
-        if loaded_results is None:
-            outputs = simple_2D_low(desvars['x'])
-            
-            self.save_results(desvars, outputs)
-            
-            return outputs
-            
-        else:
-            return loaded_results
-
 
 class simple_1D(om.ExplicitComponent):
     

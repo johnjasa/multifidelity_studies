@@ -98,5 +98,5 @@ def hifi(x):
 res = minimize(hifi, x_init[2, :], method='SLSQP', tol=1e-6, bounds=[(0., 1.), (0., 1.)])
 
 print(f'Number of high-fidelity calls for hifi only: {res.nfev}, jac calls: {res.njev}')
-print(f'Answer found: {res.x}')
+print(f'Answer found: {res.x}, {res.fun}')
 print()
