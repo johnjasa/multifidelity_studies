@@ -11,8 +11,8 @@ from multifidelity_studies.methods.base_method import BaseMethod
 
 class SimpleTrustRegion(BaseMethod):
     
-    def __init__(self, model_low, model_high, max_trust_radius=1000., eta=0.15, gtol=1e-4, trust_radius=0.2):
-        super().__init__(model_low, model_high)
+    def __init__(self, model_low, model_high, bounds, max_trust_radius=1000., eta=0.15, gtol=1e-4, trust_radius=0.2):
+        super().__init__(model_low, model_high, bounds)
         
         self.max_trust_radius = max_trust_radius
         self.eta = eta
@@ -24,9 +24,9 @@ class SimpleTrustRegion(BaseMethod):
         
         # min (m_k(x_k + s_k)) st ||x_k|| <= del K
         lower_bounds = x0 - self.trust_radius
-        lower_bounds[lower_bounds < 0.] = 0.
+        lower_bounds = np.maximum(lower_bounds, self.bounds[:, 0])
         upper_bounds = x0 + self.trust_radius
-        upper_bounds[upper_bounds > 1.] = 1.
+        upper_bounds = np.maximum(lower_bounds, self.bounds[:, 1])
         
         bounds = list(zip(lower_bounds, upper_bounds))
         res = minimize(self.approximation_function, x0, method='SLSQP', tol=1e-10, bounds=bounds)
@@ -41,18 +41,14 @@ class SimpleTrustRegion(BaseMethod):
     
     def update_trust_region(self, x_new, hits_boundary):
         # 3. Compute the ratio of actual improvement to predicted improvement
-        desvars = OrderedDict()
-        desvars['x'] = np.squeeze(x_new)
-        
-        actual_reduction = self.model_high.run(self.list_of_desvars[-1]) - self.model_high.run(desvars)
-        predicted_reduction = self.model_high.run(self.list_of_desvars[-1]) - self.approximation_function(x_new)
+        actual_reduction = self.model_high.run(self.x[-1]) - self.model_high.run(x_new)
+        predicted_reduction = self.model_high.run(self.x[-1]) - self.approximation_function(x_new)
         
         # 4. Accept or reject the trial point according to that ratio
         if predicted_reduction <= 0:
             print('not enough reduction! rejecting point')
         else:
             self.x = np.vstack((self.x, np.atleast_2d(x_new)))
-            self.list_of_desvars.append(desvars)
             
         if predicted_reduction == 0.:
             rho = 0.
@@ -76,22 +72,22 @@ class SimpleTrustRegion(BaseMethod):
             
             self.update_trust_region(x_new, hits_boundary)
                 
-            print(self.x)
-            print(self.model_high.run_vec(self.list_of_desvars))
-            print()
-            
             self.construct_approximation()
         
             # self.plot_functions()
             
             if self.trust_radius <= 1e-4:
+                print()
                 print("Found optimal point!")
+                print(self.x[-1, :])
+                print(self.model_high.run(self.x[-1, :]))
                 break
         
 
 # Following Algo 2.1 from Andrew March's dissertation
 np.random.seed(13)
 
-trust_region = SimpleTrustRegion(simple_2D_low_model, simple_2D_high_model)
+bounds = np.array([[0.0, 1.0], [0.0, 1.0]])
+trust_region = SimpleTrustRegion(simple_2D_low_model, simple_2D_high_model, bounds)
 trust_region.optimize()
 

@@ -9,19 +9,19 @@ import smt.surrogate_models as smt
 
 class BaseMethod():
     
-    def __init__(self, model_low, model_high, warmstart_low=None, warmstart_high=None):
+    def __init__(self, model_low, model_high, bounds, warmstart_low=None, warmstart_high=None):
         
-        self.list_of_desvars = []
+        self.bounds = np.array(bounds)
         self.initialize_points()
         
-        desvars = self.list_of_desvars[-1]
+        desvars = {'x' : np.array([0., 0.25])}
         
         self.model_low = model_low(desvars, warmstart_low)
         self.model_high = model_high(desvars, warmstart_high)
         
     def construct_approximation(self, interp_method='smt'):
-        y_low = self.model_low.run_vec(self.list_of_desvars)
-        y_high = self.model_high.run_vec(self.list_of_desvars)
+        y_low = self.model_low.run_vec(self.x)
+        y_high = self.model_high.run_vec(self.x)
         differences = y_high - y_low
         
         if interp_method == 'rbf':
@@ -33,17 +33,14 @@ class BaseMethod():
             
             # Create m_k = lofi + RBF
             def approximation_function(x):
-                desvars = self.model_low.unflatten_desvars(x)
-                return self.model_low.run(desvars) + e(*x)
+                return self.model_low.run(x) + e(*x)
                 
         elif interp_method == 'smt':
             xt = self.x
             yt = differences
             
-            xlimits = np.array([[0.0, 1.0], [0.0, 1.0]])
-
             sm = smt.RMTB(
-                xlimits=xlimits,
+                xlimits=self.bounds,
                 order=3,
                 num_ctrl_pts=3,
                 print_global=False,
@@ -52,8 +49,7 @@ class BaseMethod():
             sm.train()
             
             def approximation_function(x):
-                desvars = self.model_low.unflatten_desvars(x)
-                return self.model_low.run(desvars) + sm.predict_values(np.atleast_2d(x))
+                return self.model_low.run(x) + sm.predict_values(np.atleast_2d(x))
         
         # Create m_k = lofi + RBF
         self.approximation_function = approximation_function
@@ -64,11 +60,6 @@ class BaseMethod():
         x_init = np.random.rand(num_initial_points, self.n_dims)
         x = x_init.copy()
         
-        for i in range(num_initial_points):
-            desvars = OrderedDict()
-            desvars['x'] = x[i, :]
-            self.list_of_desvars.append(desvars)
-            
         self.x = x
         
     def plot_functions(self):
@@ -77,16 +68,7 @@ class BaseMethod():
         X, Y = np.meshgrid(x_plot, x_plot)
         x_values = np.vstack((X.flatten(), Y.flatten())).T
         
-        list_of_desvars_plot = []
-        surrogate = np.zeros((n_plot*n_plot))
-        for j in range(n_plot*n_plot):
-            desvars = OrderedDict()
-            desvars['x'] = x_values[j]
-            list_of_desvars_plot.append(desvars)
-            surrogate[j] = self.approximation_function(x_values[j])
-            
-        y_plot_high = self.model_high.run_vec(list_of_desvars_plot).reshape(n_plot, n_plot)
-        # y_plot_high = surrogate.reshape(n_plot, n_plot)
+        y_plot_high = self.model_high.run_vec(x_values).reshape(n_plot, n_plot)
     
         plt.figure()
         plt.contourf(X, Y, y_plot_high, levels=101)
@@ -103,8 +85,8 @@ class BaseMethod():
             ])
         plt.plot(points[:, 0], points[:, 1], 'w--')
         
-        plt.xlim([0., 1])
-        plt.ylim([0., 1])
+        plt.xlim(self.bounds[0])
+        plt.ylim(self.bounds[1])
         
         plt.show()
         

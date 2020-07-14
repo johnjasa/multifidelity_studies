@@ -36,8 +36,7 @@ class BaseModel():
             with open(self.warmstart_file, 'wb') as f:
                 dill.dump(saved_data, f)
         
-    def load_results(self, desvars):
-        flattened_desvars = self.flatten_desvars(desvars)
+    def load_results(self, flattened_desvars):
         for i, saved_dict in enumerate(self.saved_desvars):
             same_dict = True
             
@@ -50,9 +49,10 @@ class BaseModel():
                 
         return None
         
-    def run(self, desvars):
-        loaded_results = self.load_results(desvars)
+    def run(self, flattened_desvars):
+        loaded_results = self.load_results(flattened_desvars)
         if loaded_results is None:
+            desvars = self.unflatten_desvars(flattened_desvars)
             outputs = self.compute(desvars)
             
             self.save_results(desvars, outputs)
@@ -62,10 +62,10 @@ class BaseModel():
         else:
             return loaded_results
         
-    def run_vec(self, list_of_desvars):
+    def run_vec(self, x):
         list_of_results = []
-        for i, desvars in enumerate(list_of_desvars):
-            list_of_results.append(self.run(desvars))
+        for i, flattened_desvars in enumerate(x):
+            list_of_results.append(self.run(flattened_desvars))
         return np.squeeze(np.array(list_of_results))
         
     def flatten_desvars(self, desvars):
