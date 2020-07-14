@@ -18,48 +18,33 @@ fname_wt_output = folder_output + "temp.yaml"
 
 class CCBlade(BaseModel):
     
-    def run(self, desvars):
+    def compute(self, desvars):
+        wt_opt_ccblade, analysis_options_ccblade, opt_options_ccblade = run_wisdem(
+            fname_wt_input,
+            fname_analysis_options_ccblade,
+            fname_opt_options,
+            fname_wt_output,
+            folder_output,
+            desvars,
+        )
         
-        loaded_results = self.load_results(desvars)
-        if loaded_results is None:
-            wt_opt_ccblade, analysis_options_ccblade, opt_options_ccblade = run_wisdem(
-                fname_wt_input,
-                fname_analysis_options_ccblade,
-                fname_opt_options,
-                fname_wt_output,
-                folder_output,
-                desvars,
-            )
+        outputs = wt_opt_ccblade["ccblade.CP"][0]
             
-            outputs = wt_opt_ccblade["ccblade.CP"][0]
-            
-            self.save_results(desvars, outputs)
-            
-            return outputs
-            
-        else:
-            return loaded_results
+        return outputs
+
 
 class OpenFAST(BaseModel):
         
-    def run(self, desvars):
+    def compute(self, desvars):
+        wt_opt_openfast, analysis_options_openfast, opt_options_openfast = run_wisdem(
+            fname_wt_input,
+            fname_analysis_options_openfast,
+            fname_opt_options,
+            fname_wt_output,
+            folder_output,
+            desvars,
+        )
         
-        loaded_results = self.load_results(desvars)
-        if loaded_results is None:
-            wt_opt_openfast, analysis_options_openfast, opt_options_openfast = run_wisdem(
-                fname_wt_input,
-                fname_analysis_options_openfast,
-                fname_opt_options,
-                fname_wt_output,
-                folder_output,
-                desvars,
-            )
-            
-            outputs = wt_opt_openfast["aeroelastic.Cp"][0]
-            
-            self.save_results(desvars, outputs)
-            
-            return outputs
-            
-        else:
-            return loaded_results
+        outputs = wt_opt_openfast["aeroelastic.Cp"][0]
+        
+        return outputs

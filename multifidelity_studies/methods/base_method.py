@@ -9,15 +9,15 @@ import smt.surrogate_models as smt
 
 class BaseMethod():
     
-    def __init__(self, model_low, model_high):
+    def __init__(self, model_low, model_high, warmstart_low=None, warmstart_high=None):
         
         self.list_of_desvars = []
         self.initialize_points()
         
         desvars = self.list_of_desvars[-1]
         
-        self.model_low = model_low(desvars, 'low_2D_results.pkl')
-        self.model_high = model_high(desvars, 'high_2D_results.pkl')
+        self.model_low = model_low(desvars, warmstart_low)
+        self.model_high = model_high(desvars, warmstart_high)
         
     def construct_approximation(self, interp_method='smt'):
         y_low = self.model_low.run_vec(self.list_of_desvars)

@@ -6,17 +6,18 @@ import numpy as np
 
 class BaseModel():
     
-    def __init__(self, desvars_init, warmstart_file):
+    def __init__(self, desvars_init, warmstart_file=None):
         self.saved_desvars = []
         self.saved_outputs = []
         
-        if os.path.exists(warmstart_file):
-            with open(warmstart_file, 'rb') as f:
-                saved_data = dill.load(f)
-            self.saved_desvars = saved_data['desvars']
-            self.saved_outputs = saved_data['outputs']
-        
         self.warmstart_file = warmstart_file
+        if warmstart_file is not None:
+            if os.path.exists(warmstart_file):
+                with open(warmstart_file, 'rb') as f:
+                    saved_data = dill.load(f)
+                self.saved_desvars = saved_data['desvars']
+                self.saved_outputs = saved_data['outputs']
+            
         self.set_desvar_size_dict(desvars_init)
         
     def set_desvar_size_dict(self, desvars):
@@ -25,31 +26,41 @@ class BaseModel():
             self.desvar_sizes[key] = value.size
     
     def save_results(self, desvars, outputs):
-        self.saved_desvars.append(desvars)
+        self.saved_desvars.append(self.flatten_desvars(desvars))
         self.saved_outputs.append(outputs)
         
-        saved_data = {}
-        saved_data['desvars'] = self.saved_desvars
-        saved_data['outputs'] = self.saved_outputs
-        with open(self.warmstart_file, 'wb') as f:
-            dill.dump(saved_data, f)
+        if self.warmstart_file is not None:
+            saved_data = {}
+            saved_data['desvars'] = self.saved_desvars
+            saved_data['outputs'] = self.saved_outputs
+            with open(self.warmstart_file, 'wb') as f:
+                dill.dump(saved_data, f)
         
     def load_results(self, desvars):
+        flattened_desvars = self.flatten_desvars(desvars)
         for i, saved_dict in enumerate(self.saved_desvars):
             same_dict = True
             
-            # Loop through the key/value pairs in each dictionary and see if they're
-            # all the exact same. If one is not the same, they are not the same dict,
-            # so we cannot use those saved results.
-            for (key_1, value_1), (key_2, value_2) in zip(desvars.items(), saved_dict.items()):
-                if not np.all(value_1 == value_2):
-                    same_dict = False
-                    break
+            if not np.all(flattened_desvars == saved_dict):
+                same_dict = False
+                break
                     
             if same_dict:
                 return self.saved_outputs[i]
                 
         return None
+        
+    def run(self, desvars):
+        loaded_results = self.load_results(desvars)
+        if loaded_results is None:
+            outputs = self.compute(desvars)
+            
+            self.save_results(desvars, outputs)
+            
+            return outputs
+            
+        else:
+            return loaded_results
         
     def run_vec(self, list_of_desvars):
         list_of_results = []
@@ -61,8 +72,8 @@ class BaseModel():
         flattened_desvars = []
         
         for key, value in desvars.items():
-            flattened_value = np.flatten(value)
-            flattened_desvars.append(flattened_value)
+            flattened_value = np.squeeze(value)
+            flattened_desvars.extend(flattened_value)
             
         return np.array(flattened_desvars)
         

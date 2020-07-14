@@ -69,7 +69,7 @@ class SimpleTrustRegion(BaseMethod):
             
     def optimize(self):
         self.construct_approximation()
-        self.plot_functions()
+        # self.plot_functions()
         
         for i in range(20):
             x_new, hits_boundary = self.find_next_point()
@@ -82,9 +82,9 @@ class SimpleTrustRegion(BaseMethod):
             
             self.construct_approximation()
         
-            self.plot_functions()
+            # self.plot_functions()
             
-            if self.trust_radius <= 1e-5:
+            if self.trust_radius <= 1e-4:
                 print("Found optimal point!")
                 break
         

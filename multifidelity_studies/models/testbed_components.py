@@ -31,14 +31,12 @@ def simple_2D_low(x):
     
     
 class simple_2D_high_model(BaseModel):
-    
-    def run(self, desvars):
+    def compute(self, desvars):
         return simple_2D_high(desvars['x'])
             
 
 class simple_2D_low_model(BaseModel):
-    
-    def run(self, desvars):
+    def compute(self, desvars):
         return simple_2D_low(desvars['x'])
         
 
