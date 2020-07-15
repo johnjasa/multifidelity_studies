@@ -22,8 +22,11 @@ class BaseModel():
         
     def set_desvar_size_dict(self, desvars):
         self.desvar_sizes = OrderedDict()
+        total_size = 0
         for key, value in desvars.items():
             self.desvar_sizes[key] = value.size
+            total_size += value.size
+        self.total_size = total_size
     
     def save_results(self, desvars, outputs):
         self.saved_desvars.append(self.flatten_desvars(desvars))
@@ -37,14 +40,14 @@ class BaseModel():
                 dill.dump(saved_data, f)
         
     def load_results(self, flattened_desvars):
-        for i, saved_dict in enumerate(self.saved_desvars):
-            same_dict = True
+        for i, saved_desvar in enumerate(self.saved_desvars):
+            same_inputs = True
             
-            if not np.all(flattened_desvars == saved_dict):
-                same_dict = False
+            if not np.all(flattened_desvars == saved_desvar):
+                same_inputs = False
                 break
                     
-            if same_dict:
+            if same_inputs:
                 return self.saved_outputs[i]
                 
         return None

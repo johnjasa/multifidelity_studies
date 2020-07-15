@@ -9,15 +9,15 @@ import smt.surrogate_models as smt
 
 class BaseMethod():
     
-    def __init__(self, model_low, model_high, bounds, warmstart_low=None, warmstart_high=None):
+    def __init__(self, model_low, model_high, bounds, num_initial_points=5):
         
         self.bounds = np.array(bounds)
-        self.initialize_points()
         
-        desvars = {'x' : np.array([0., 0.25])}
+        self.model_low = model_low
+        self.model_high = model_high
         
-        self.model_low = model_low(desvars, warmstart_low)
-        self.model_high = model_high(desvars, warmstart_high)
+        self.initialize_points(num_initial_points)
+        self.counter = 0
         
     def construct_approximation(self, interp_method='smt'):
         y_low = self.model_low.run_vec(self.x)
@@ -54,13 +54,10 @@ class BaseMethod():
         # Create m_k = lofi + RBF
         self.approximation_function = approximation_function
         
-    def initialize_points(self, num_initial_points=5):
-        self.n_dims = 2
-        
-        x_init = np.random.rand(num_initial_points, self.n_dims)
-        x = x_init.copy()
-        
-        self.x = x
+    def initialize_points(self, num_initial_points):
+        self.n_dims = self.model_high.total_size
+        x_init_raw = np.random.rand(num_initial_points, self.n_dims)
+        self.x = x_init_raw * (self.bounds[:, 1] - self.bounds[:, 0]) + self.bounds[:, 0]
         
     def plot_functions(self):
         n_plot = 11
@@ -70,7 +67,7 @@ class BaseMethod():
         
         y_plot_high = self.model_high.run_vec(x_values).reshape(n_plot, n_plot)
     
-        plt.figure()
+        plt.figure(figsize=(6,4))
         plt.contourf(X, Y, y_plot_high, levels=101)
         plt.scatter(self.x[:, 0], self.x[:, 1], color='white')
         
@@ -88,6 +85,19 @@ class BaseMethod():
         plt.xlim(self.bounds[0])
         plt.ylim(self.bounds[1])
         
-        plt.show()
+        plt.xlabel('x0')
+        plt.ylabel('x1')
+        
+        num_iter = self.x.shape[0]
+        num_offset = 10
+        
+        if num_iter <= 5:
+            for i in range(num_offset):
+                plt.savefig(f'image_{self.counter}.png', dpi=300)
+                self.counter += 1
+        else:
+            plt.savefig(f'image_{self.counter}.png', dpi=300)
+            self.counter += 1
+                
         
         

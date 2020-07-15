@@ -76,18 +76,10 @@ class SimpleTrustRegion(BaseMethod):
         
             # self.plot_functions()
             
-            if self.trust_radius <= 1e-4:
+            if self.trust_radius <= 1e-6:
                 print()
                 print("Found optimal point!")
                 print(self.x[-1, :])
                 print(self.model_high.run(self.x[-1, :]))
                 break
         
-
-# Following Algo 2.1 from Andrew March's dissertation
-np.random.seed(13)
-
-bounds = np.array([[0.0, 1.0], [0.0, 1.0]])
-trust_region = SimpleTrustRegion(simple_2D_low_model, simple_2D_high_model, bounds)
-trust_region.optimize()
-
