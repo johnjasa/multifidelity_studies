@@ -29,7 +29,7 @@ class SimpleTrustRegion(BaseMethod):
         upper_bounds = np.maximum(lower_bounds, self.bounds[:, 1])
         
         bounds = list(zip(lower_bounds, upper_bounds))
-        res = minimize(self.approximation_function, x0, method='SLSQP', tol=1e-10, bounds=bounds)
+        res = minimize(self.approximation_functions[self.objective], x0, method='SLSQP', tol=1e-10, bounds=bounds)
         x_new = res.x
         
         if np.any(np.abs(lower_bounds - x_new) < 1e-6) or np.any(np.abs(upper_bounds - x_new) < 1e-6):
@@ -42,7 +42,7 @@ class SimpleTrustRegion(BaseMethod):
     def update_trust_region(self, x_new, hits_boundary):
         # 3. Compute the ratio of actual improvement to predicted improvement
         actual_reduction = self.model_high.run(self.x[-1])[self.objective] - self.model_high.run(x_new)[self.objective]
-        predicted_reduction = self.model_high.run(self.x[-1])[self.objective] - self.approximation_function(x_new)
+        predicted_reduction = self.model_high.run(self.x[-1])[self.objective] - self.approximation_functions[self.objective](x_new)
         
         # 4. Accept or reject the trial point according to that ratio
         if predicted_reduction <= 0:
@@ -64,7 +64,7 @@ class SimpleTrustRegion(BaseMethod):
         print('trust radius', self.trust_radius)
             
     def optimize(self):
-        self.construct_approximation()
+        self.construct_approximations()
         # self.plot_functions()
         
         for i in range(20):
@@ -72,7 +72,7 @@ class SimpleTrustRegion(BaseMethod):
             
             self.update_trust_region(x_new, hits_boundary)
                 
-            self.construct_approximation()
+            self.construct_approximations()
         
             # self.plot_functions()
             

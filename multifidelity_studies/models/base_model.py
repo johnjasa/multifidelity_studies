@@ -74,6 +74,7 @@ class BaseModel():
                 
         for key in dict_of_results:
             dict_of_results[key] = np.squeeze(np.array(dict_of_results[key]))
+            
         return dict_of_results
         
     def flatten_desvars(self, desvars):

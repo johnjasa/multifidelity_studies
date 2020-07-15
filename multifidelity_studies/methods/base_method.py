@@ -37,38 +37,46 @@ class BaseMethod():
                                  'upper' : upper,
                                  })
                                  
-    def construct_approximation(self, interp_method='smt'):
-        y_low = self.model_low.run_vec(self.x)[self.objective]
-        y_high = self.model_high.run_vec(self.x)[self.objective]
-        differences = y_high - y_low
+    def construct_approximations(self, interp_method='smt'):
+        outputs_low = self.model_low.run_vec(self.x)
+        outputs_high = self.model_high.run_vec(self.x)
         
-        if interp_method == 'rbf':
-            input_arrays = np.split(self.x, self.x.shape[1], axis=1)
-            input_arrays = [x.flatten() for x in input_arrays]
+        approximation_functions = {}
+        outputs_to_approximate = [self.objective]
+        if len(self.constraints) > 0:
+            outputs_to_approximate.append(constraint['constraint_name'] for constraint in self.constraints)
+        
+        for output_name in outputs_to_approximate:
+            differences = outputs_high[output_name] - outputs_low[output_name]
             
-            # Construct RBF interpolater for error function
-            e = Rbf(*input_arrays, differences)
-            
-            # Create m_k = lofi + RBF
-            def approximation_function(x):
-                return self.model_low.run(x)[self.objective] + e(*x)
+            if interp_method == 'rbf':
+                input_arrays = np.split(self.x, self.x.shape[1], axis=1)
+                input_arrays = [x.flatten() for x in input_arrays]
                 
-        elif interp_method == 'smt':
-            sm = smt.RMTB(
-                xlimits=self.bounds,
-                order=3,
-                num_ctrl_pts=3,
-                print_global=False,
-            )
-            sm.set_training_values(self.x, differences)
-            sm.train()
-            
-            def approximation_function(x):
-                return self.model_low.run(x)[self.objective] + sm.predict_values(np.atleast_2d(x))
+                # Construct RBF interpolater for error function
+                e = Rbf(*input_arrays, differences)
+                
+                # Create m_k = lofi + RBF
+                def approximation_function(x):
+                    return self.model_low.run(x)[output_name] + e(*x)
+                    
+            elif interp_method == 'smt':
+                sm = smt.RMTB(
+                    xlimits=self.bounds,
+                    order=3,
+                    num_ctrl_pts=3,
+                    print_global=False,
+                )
+                sm.set_training_values(self.x, differences)
+                sm.train()
+                
+                def approximation_function(x):
+                    return self.model_low.run(x)[output_name] + sm.predict_values(np.atleast_2d(x))
         
-        # Create m_k = lofi + RBF
-        self.approximation_function = approximation_function
-
+            # Create m_k = lofi + RBF
+            approximation_functions[output_name] = approximation_function
+            
+        self.approximation_functions = approximation_functions
         
     def plot_functions(self):
         n_plot = 11
