@@ -57,19 +57,24 @@ class BaseModel():
         if loaded_results is None:
             desvars = self.unflatten_desvars(flattened_desvars)
             outputs = self.compute(desvars)
-            
             self.save_results(desvars, outputs)
-            
             return outputs
-            
         else:
             return loaded_results
         
     def run_vec(self, x):
-        list_of_results = []
+        dict_of_results = {}
         for i, flattened_desvars in enumerate(x):
-            list_of_results.append(self.run(flattened_desvars))
-        return np.squeeze(np.array(list_of_results))
+            outputs = self.run(flattened_desvars)
+            
+            for key in outputs:
+                if key not in dict_of_results:
+                    dict_of_results[key] = []
+                dict_of_results[key].append(outputs[key])
+                
+        for key in dict_of_results:
+            dict_of_results[key] = np.squeeze(np.array(dict_of_results[key]))
+        return dict_of_results
         
     def flatten_desvars(self, desvars):
         flattened_desvars = []

@@ -32,12 +32,15 @@ def simple_2D_low(x):
     
 class simple_2D_high_model(BaseModel):
     def compute(self, desvars):
-        return simple_2D_high(desvars['x'])
-            
+        outputs = {}
+        outputs['y'] = simple_2D_high(desvars['x'])
+        return outputs
 
 class simple_2D_low_model(BaseModel):
     def compute(self, desvars):
-        return simple_2D_low(desvars['x'])
+        outputs = {}
+        outputs['y'] = simple_2D_low(desvars['x'])
+        return outputs
         
 
 class simple_1D(om.ExplicitComponent):

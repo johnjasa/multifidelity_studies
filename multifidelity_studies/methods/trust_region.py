@@ -41,8 +41,8 @@ class SimpleTrustRegion(BaseMethod):
     
     def update_trust_region(self, x_new, hits_boundary):
         # 3. Compute the ratio of actual improvement to predicted improvement
-        actual_reduction = self.model_high.run(self.x[-1]) - self.model_high.run(x_new)
-        predicted_reduction = self.model_high.run(self.x[-1]) - self.approximation_function(x_new)
+        actual_reduction = self.model_high.run(self.x[-1])[self.objective] - self.model_high.run(x_new)[self.objective]
+        predicted_reduction = self.model_high.run(self.x[-1])[self.objective] - self.approximation_function(x_new)
         
         # 4. Accept or reject the trial point according to that ratio
         if predicted_reduction <= 0:
@@ -80,6 +80,6 @@ class SimpleTrustRegion(BaseMethod):
                 print()
                 print("Found optimal point!")
                 print(self.x[-1, :])
-                print(self.model_high.run(self.x[-1, :]))
+                print(self.model_high.run(self.x[-1, :])[self.objective])
                 break
         

@@ -19,9 +19,27 @@ class BaseMethod():
         self.initialize_points(num_initial_points)
         self.counter = 0
         
+        self.objective = None
+        self.constraints = []
+        
+    def initialize_points(self, num_initial_points):
+        self.n_dims = self.model_high.total_size
+        x_init_raw = np.random.rand(num_initial_points, self.n_dims)
+        self.x = x_init_raw * (self.bounds[:, 1] - self.bounds[:, 0]) + self.bounds[:, 0]
+        
+    def add_objective(self, objective_name):
+        self.objective = objective_name
+        
+    def add_constraint(self, constraint_name, equals=None, lower=None, upper=None):
+        self.constraints.append({'constraint_name' : constraint_name,
+                                 'equals' : equals,
+                                 'lower' : lower,
+                                 'upper' : upper,
+                                 })
+                                 
     def construct_approximation(self, interp_method='smt'):
-        y_low = self.model_low.run_vec(self.x)
-        y_high = self.model_high.run_vec(self.x)
+        y_low = self.model_low.run_vec(self.x)[self.objective]
+        y_high = self.model_high.run_vec(self.x)[self.objective]
         differences = y_high - y_low
         
         if interp_method == 'rbf':
@@ -33,31 +51,24 @@ class BaseMethod():
             
             # Create m_k = lofi + RBF
             def approximation_function(x):
-                return self.model_low.run(x) + e(*x)
+                return self.model_low.run(x)[self.objective] + e(*x)
                 
         elif interp_method == 'smt':
-            xt = self.x
-            yt = differences
-            
             sm = smt.RMTB(
                 xlimits=self.bounds,
                 order=3,
                 num_ctrl_pts=3,
                 print_global=False,
             )
-            sm.set_training_values(xt, yt)
+            sm.set_training_values(self.x, differences)
             sm.train()
             
             def approximation_function(x):
-                return self.model_low.run(x) + sm.predict_values(np.atleast_2d(x))
+                return self.model_low.run(x)[self.objective] + sm.predict_values(np.atleast_2d(x))
         
         # Create m_k = lofi + RBF
         self.approximation_function = approximation_function
-        
-    def initialize_points(self, num_initial_points):
-        self.n_dims = self.model_high.total_size
-        x_init_raw = np.random.rand(num_initial_points, self.n_dims)
-        self.x = x_init_raw * (self.bounds[:, 1] - self.bounds[:, 0]) + self.bounds[:, 0]
+
         
     def plot_functions(self):
         n_plot = 11
@@ -65,7 +76,7 @@ class BaseMethod():
         X, Y = np.meshgrid(x_plot, x_plot)
         x_values = np.vstack((X.flatten(), Y.flatten())).T
         
-        y_plot_high = self.model_high.run_vec(x_values).reshape(n_plot, n_plot)
+        y_plot_high = self.model_high.run_vec(x_values)[self.objective].reshape(n_plot, n_plot)
     
         plt.figure(figsize=(6,4))
         plt.contourf(X, Y, y_plot_high, levels=101)
