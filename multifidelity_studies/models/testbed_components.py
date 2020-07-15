@@ -34,12 +34,14 @@ class simple_2D_high_model(BaseModel):
     def compute(self, desvars):
         outputs = {}
         outputs['y'] = simple_2D_high(desvars['x'])
+        outputs['con'] = np.sum(desvars['x'])
         return outputs
 
 class simple_2D_low_model(BaseModel):
     def compute(self, desvars):
         outputs = {}
         outputs['y'] = simple_2D_low(desvars['x'])
+        outputs['con'] = np.sum(desvars['x']) + 1.
         return outputs
         
 

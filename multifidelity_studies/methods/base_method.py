@@ -31,7 +31,7 @@ class BaseMethod():
         self.objective = objective_name
         
     def add_constraint(self, constraint_name, equals=None, lower=None, upper=None):
-        self.constraints.append({'constraint_name' : constraint_name,
+        self.constraints.append({'name' : constraint_name,
                                  'equals' : equals,
                                  'lower' : lower,
                                  'upper' : upper,
@@ -43,8 +43,10 @@ class BaseMethod():
         
         approximation_functions = {}
         outputs_to_approximate = [self.objective]
+        
         if len(self.constraints) > 0:
-            outputs_to_approximate.append(constraint['constraint_name'] for constraint in self.constraints)
+            for constraint in self.constraints:
+                outputs_to_approximate.append(constraint['name'])
         
         for output_name in outputs_to_approximate:
             differences = outputs_high[output_name] - outputs_low[output_name]
@@ -70,7 +72,7 @@ class BaseMethod():
                 sm.set_training_values(self.x, differences)
                 sm.train()
                 
-                def approximation_function(x):
+                def approximation_function(x, output_name=output_name, sm=sm):
                     return self.model_low.run(x)[output_name] + sm.predict_values(np.atleast_2d(x))
         
             # Create m_k = lofi + RBF
@@ -86,7 +88,7 @@ class BaseMethod():
         
         y_plot_high = self.model_high.run_vec(x_values)[self.objective].reshape(n_plot, n_plot)
     
-        plt.figure(figsize=(6,4))
+        plt.figure(figsize=(6, 6))
         plt.contourf(X, Y, y_plot_high, levels=101)
         plt.scatter(self.x[:, 0], self.x[:, 1], color='white')
         
@@ -107,16 +109,18 @@ class BaseMethod():
         plt.xlabel('x0')
         plt.ylabel('x1')
         
-        num_iter = self.x.shape[0]
-        num_offset = 10
+        plt.show()
         
-        if num_iter <= 5:
-            for i in range(num_offset):
-                plt.savefig(f'image_{self.counter}.png', dpi=300)
-                self.counter += 1
-        else:
-            plt.savefig(f'image_{self.counter}.png', dpi=300)
-            self.counter += 1
-                
+        # num_iter = self.x.shape[0]
+        # num_offset = 10
+        # 
+        # if num_iter <= 5:
+        #     for i in range(num_offset):
+        #         plt.savefig(f'image_{self.counter}.png', dpi=300)
+        #         self.counter += 1
+        # else:
+        #     plt.savefig(f'image_{self.counter}.png', dpi=300)
+        #     self.counter += 1
+        # 
         
         

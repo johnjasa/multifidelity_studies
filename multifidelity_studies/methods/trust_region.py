@@ -19,6 +19,29 @@ class SimpleTrustRegion(BaseMethod):
         self.gtol = gtol
         self.trust_radius = trust_radius
         
+    def process_constraints(self):
+        list_of_constraints = []
+        for constraint in self.constraints:
+            scipy_constraint = {}
+            
+            func = self.approximation_functions[constraint['name']]
+            if constraint['equals'] is not None:
+                scipy_constraint['type'] = 'eq'
+                scipy_constraint['fun'] = lambda x: np.squeeze(func(x) - constraint['equals'])
+                
+            if constraint['upper'] is not None:
+                scipy_constraint['type'] = 'ineq'
+                scipy_constraint['fun'] = lambda x: np.squeeze(constraint['upper'] - func(x))
+                
+            if constraint['lower'] is not None:
+                scipy_constraint['type'] = 'ineq'
+                scipy_constraint['fun'] = lambda x: np.squeeze(func(x) - constraint['lower'])
+                
+            list_of_constraints.append(scipy_constraint)
+            
+        self.list_of_constraints = list_of_constraints
+            
+        
     def find_next_point(self):
         x0 = self.x[-1, :]
         
@@ -29,7 +52,7 @@ class SimpleTrustRegion(BaseMethod):
         upper_bounds = np.maximum(lower_bounds, self.bounds[:, 1])
         
         bounds = list(zip(lower_bounds, upper_bounds))
-        res = minimize(self.approximation_functions[self.objective], x0, method='SLSQP', tol=1e-10, bounds=bounds)
+        res = minimize(self.approximation_functions[self.objective], x0, method='SLSQP', tol=1e-10, bounds=bounds, constraints=self.list_of_constraints)
         x_new = res.x
         
         if np.any(np.abs(lower_bounds - x_new) < 1e-6) or np.any(np.abs(upper_bounds - x_new) < 1e-6):
@@ -63,9 +86,12 @@ class SimpleTrustRegion(BaseMethod):
             self.trust_radius = min(2*self.trust_radius, self.max_trust_radius)
         print('trust radius', self.trust_radius)
             
-    def optimize(self):
+    def optimize(self, plot=False):
         self.construct_approximations()
-        # self.plot_functions()
+        self.process_constraints()
+        
+        if plot:
+            self.plot_functions()
         
         for i in range(20):
             x_new, hits_boundary = self.find_next_point()
@@ -74,7 +100,8 @@ class SimpleTrustRegion(BaseMethod):
                 
             self.construct_approximations()
         
-            # self.plot_functions()
+            if plot:
+                self.plot_functions()
             
             if self.trust_radius <= 1e-6:
                 print()
