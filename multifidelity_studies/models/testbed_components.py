@@ -41,7 +41,7 @@ class simple_2D_low_model(BaseModel):
     def compute(self, desvars):
         outputs = {}
         outputs['y'] = simple_2D_low(desvars['x'])
-        outputs['con'] = np.sum(desvars['x']) + 1.
+        outputs['con'] = np.sum(desvars['x']) + desvars['x'][1]**2 * outputs['y']
         return outputs
         
 

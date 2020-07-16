@@ -63,12 +63,16 @@ class BaseMethod():
                     return self.model_low.run(x)[output_name] + e(*x)
                     
             elif interp_method == 'smt':
-                sm = smt.RMTB(
-                    xlimits=self.bounds,
-                    order=3,
-                    num_ctrl_pts=3,
+                # sm = smt.RMTB(
+                #     xlimits=self.bounds,
+                #     order=3,
+                #     num_ctrl_pts=5,
+                #     print_global=False,
+                # )
+                sm = smt.RBF(
                     print_global=False,
                 )
+                
                 sm.set_training_values(self.x, differences)
                 sm.train()
                 
@@ -87,7 +91,13 @@ class BaseMethod():
         x_values = np.vstack((X.flatten(), Y.flatten())).T
         
         y_plot_high = self.model_high.run_vec(x_values)[self.objective].reshape(n_plot, n_plot)
-    
+        
+        # surrogate = []
+        # for x_value in x_values:
+        #     surrogate.append(np.squeeze(self.approximation_functions['con'](x_value)))
+        # surrogate = np.array(surrogate)
+        # y_plot_high = surrogate.reshape(n_plot, n_plot)
+        
         plt.figure(figsize=(6, 6))
         plt.contourf(X, Y, y_plot_high, levels=101)
         plt.scatter(self.x[:, 0], self.x[:, 1], color='white')

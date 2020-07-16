@@ -46,16 +46,16 @@ class SimpleTrustRegion(BaseMethod):
         x0 = self.x[-1, :]
         
         # min (m_k(x_k + s_k)) st ||x_k|| <= del K
-        lower_bounds = x0 - self.trust_radius
-        lower_bounds = np.maximum(lower_bounds, self.bounds[:, 0])
-        upper_bounds = x0 + self.trust_radius
-        upper_bounds = np.maximum(lower_bounds, self.bounds[:, 1])
+        trust_region_lower_bounds = x0 - self.trust_radius
+        lower_bounds = np.maximum(trust_region_lower_bounds, self.bounds[:, 0])
+        trust_region_upper_bounds = x0 + self.trust_radius
+        upper_bounds = np.minimum(trust_region_upper_bounds, self.bounds[:, 1])
         
         bounds = list(zip(lower_bounds, upper_bounds))
-        res = minimize(self.approximation_functions[self.objective], x0, method='SLSQP', tol=1e-10, bounds=bounds, constraints=self.list_of_constraints)
+        res = minimize(self.approximation_functions[self.objective], x0, method='SLSQP', tol=1e-10, bounds=bounds, constraints=self.list_of_constraints, options={'disp':False})
         x_new = res.x
         
-        if np.any(np.abs(lower_bounds - x_new) < 1e-6) or np.any(np.abs(upper_bounds - x_new) < 1e-6):
+        if np.any(np.abs(trust_region_lower_bounds - x_new) < 1e-6) or np.any(np.abs(trust_region_upper_bounds - x_new) < 1e-6):
             hits_boundary = True
         else:
             hits_boundary = False
@@ -68,10 +68,11 @@ class SimpleTrustRegion(BaseMethod):
         predicted_reduction = self.model_high.run(self.x[-1])[self.objective] - self.approximation_functions[self.objective](x_new)
         
         # 4. Accept or reject the trial point according to that ratio
-        if predicted_reduction <= 0:
-            print('not enough reduction! rejecting point')
-        else:
-            self.x = np.vstack((self.x, np.atleast_2d(x_new)))
+        # if predicted_reduction <= 0:
+        #     print('not enough reduction! rejecting point')
+        # else:
+        # Unclear if this logic is needed; it's better to update the surrogate model with a bad point, even
+        self.x = np.vstack((self.x, np.atleast_2d(x_new)))
             
         if predicted_reduction == 0.:
             rho = 0.
@@ -80,10 +81,10 @@ class SimpleTrustRegion(BaseMethod):
     
         # 5. Update trust region according to rho_k
         eta = 0.25
-        if rho < eta:
-            self.trust_radius *= 0.25
-        elif rho > eta and hits_boundary:
+        if rho >= eta and hits_boundary:
             self.trust_radius = min(2*self.trust_radius, self.max_trust_radius)
+        else:  #if rho < eta:  # Unclear if this is the best check
+            self.trust_radius *= 0.25
         print('trust radius', self.trust_radius)
             
     def optimize(self, plot=False):
@@ -94,6 +95,7 @@ class SimpleTrustRegion(BaseMethod):
             self.plot_functions()
         
         for i in range(20):
+            self.process_constraints()
             x_new, hits_boundary = self.find_next_point()
             
             self.update_trust_region(x_new, hits_boundary)
@@ -102,6 +104,8 @@ class SimpleTrustRegion(BaseMethod):
         
             if plot:
                 self.plot_functions()
+                
+            x_test = self.x[-1, :]
             
             if self.trust_radius <= 1e-6:
                 print()
