@@ -44,6 +44,35 @@ class simple_2D_low_model(BaseModel):
         outputs['con'] = np.sum(desvars['x']) + desvars['x'][1]**2 * outputs['y']
         return outputs
         
+        
+class barnes_high_model(BaseModel):
+    def compute(self, desvars):
+        outputs = {}
+        x1 = desvars['x'][0]
+        x2 = desvars['x'][1]
+        
+        outputs['y'] = -80 + 3.81 * x1 - 0.126 * x1**2 + 6.83 * x2 - 0.0302 * x1 * x2 + 1.281e-3 * x2 * x1**2
+        
+        outputs['c1'] = -(x1 * x2 / 700 - 1)
+        outputs['c2'] = -(x2 / 5 - x1**2 / 625)
+        outputs['c3'] = (x2 / 50 - 1)**2 - (x1/500 - 0.11)
+        
+        return outputs
+
+class barnes_low_model(BaseModel):
+    def compute(self, desvars):
+        outputs = {}
+        x1 = desvars['x'][0]
+        x2 = desvars['x'][1]
+        
+        outputs['y'] = -80 + 5.1 * x1 - 0.126 * x1**3 + 6.83 * x2**2 - 0.0302 * x1 * x2 + 7e-3 * x2 * x1**2
+        
+        outputs['c1'] = (-x1 - x2 + 50) / 10
+        outputs['c2'] = (0.64 * x1 - x2) / 6
+        outputs['c3'] = (x2 / 50 - 1) - (x1/500 - 0.11)
+        
+        return outputs
+        
 
 class simple_1D(om.ExplicitComponent):
     

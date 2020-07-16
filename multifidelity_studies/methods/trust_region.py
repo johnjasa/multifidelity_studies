@@ -55,7 +55,8 @@ class SimpleTrustRegion(BaseMethod):
         res = minimize(self.approximation_functions[self.objective], x0, method='SLSQP', tol=1e-10, bounds=bounds, constraints=self.list_of_constraints, options={'disp':False})
         x_new = res.x
         
-        if np.any(np.abs(trust_region_lower_bounds - x_new) < 1e-6) or np.any(np.abs(trust_region_upper_bounds - x_new) < 1e-6):
+        tol = 1e-6
+        if np.any(np.abs(trust_region_lower_bounds - x_new) < tol) or np.any(np.abs(trust_region_upper_bounds - x_new) < tol):
             hits_boundary = True
         else:
             hits_boundary = False
@@ -68,11 +69,11 @@ class SimpleTrustRegion(BaseMethod):
         predicted_reduction = self.model_high.run(self.x[-1])[self.objective] - self.approximation_functions[self.objective](x_new)
         
         # 4. Accept or reject the trial point according to that ratio
-        # if predicted_reduction <= 0:
-        #     print('not enough reduction! rejecting point')
-        # else:
         # Unclear if this logic is needed; it's better to update the surrogate model with a bad point, even
-        self.x = np.vstack((self.x, np.atleast_2d(x_new)))
+        if predicted_reduction <= 0:
+            print('not enough reduction! rejecting point')
+        else:
+            self.x = np.vstack((self.x, np.atleast_2d(x_new)))
             
         if predicted_reduction == 0.:
             rho = 0.
@@ -81,9 +82,9 @@ class SimpleTrustRegion(BaseMethod):
     
         # 5. Update trust region according to rho_k
         eta = 0.25
-        if rho >= eta and hits_boundary:
+        if rho >= eta or hits_boundary:
             self.trust_radius = min(2*self.trust_radius, self.max_trust_radius)
-        else:  #if rho < eta:  # Unclear if this is the best check
+        elif rho < eta:  # Unclear if this is the best check
             self.trust_radius *= 0.25
         print('trust radius', self.trust_radius)
             
@@ -94,7 +95,7 @@ class SimpleTrustRegion(BaseMethod):
         if plot:
             self.plot_functions()
         
-        for i in range(20):
+        for i in range(100):
             self.process_constraints()
             x_new, hits_boundary = self.find_next_point()
             
@@ -108,9 +109,10 @@ class SimpleTrustRegion(BaseMethod):
             x_test = self.x[-1, :]
             
             if self.trust_radius <= 1e-6:
-                print()
-                print("Found optimal point!")
-                print(self.x[-1, :])
-                print(self.model_high.run(self.x[-1, :])[self.objective])
                 break
+                
+        print()
+        print("Found optimal point!")
+        print(self.x[-1, :])
+        print(self.model_high.run(self.x[-1, :])[self.objective])
         

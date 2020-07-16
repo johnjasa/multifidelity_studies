@@ -86,8 +86,9 @@ class BaseMethod():
         
     def plot_functions(self):
         n_plot = 11
-        x_plot = np.linspace(0., 1., n_plot)
-        X, Y = np.meshgrid(x_plot, x_plot)
+        x_plot = np.linspace(self.bounds[0, 0], self.bounds[0, 1], n_plot)
+        y_plot = np.linspace(self.bounds[1, 0], self.bounds[1, 1], n_plot)
+        X, Y = np.meshgrid(x_plot, y_plot)
         x_values = np.vstack((X.flatten(), Y.flatten())).T
         
         y_plot_high = self.model_high.run_vec(x_values)[self.objective].reshape(n_plot, n_plot)
