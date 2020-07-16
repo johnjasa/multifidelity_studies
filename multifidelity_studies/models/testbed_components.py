@@ -74,24 +74,24 @@ class barnes_low_model(BaseModel):
         return outputs
         
 
-class simple_1D(om.ExplicitComponent):
-    
-    def initialize(self):
-        self.options.declare('fidelity', values=['low', 'high'])
-        self.options.declare('n_pts')
-    
-    def setup(self):
-        self.add_input('x', shape=self.options['n_pts'])
+class eggcrate_high_model(BaseModel):
+    def compute(self, desvars):
+        outputs = {}
+        x1 = desvars['x'][0]
+        x2 = desvars['x'][1]
         
-        self.add_output('y', shape=self.options['n_pts'])
+        outputs['y'] = x1**2 + x2**2 + 5 * (np.sin(x1)**2 + np.sin(x2)**2)
         
-        self.declare_partials('y', 'x', method='cs')
-        
-    def compute(self, inputs, outputs):
-        fidelity = self.options['fidelity']
-        x = inputs['x']
+        return outputs
 
-        if fidelity == 'high':
-            outputs['y'] = simple_1D_high(x)
-        else:
-            outputs['y'] = simple_1D_low(x)
+class eggcrate_low_model(BaseModel):
+    def compute(self, desvars):
+        outputs = {}
+        x1 = desvars['x'][0]
+        x2 = desvars['x'][1]
+        
+        outputs['y'] = (x1-1)**2 + (x2+2)**2 + 5 * (np.sin(x1)**2 + np.sin(x2)**2)
+        
+        return outputs
+        
+

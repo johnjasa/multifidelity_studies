@@ -95,7 +95,7 @@ class SimpleTrustRegion(BaseMethod):
         if plot:
             self.plot_functions()
         
-        for i in range(100):
+        for i in range(30):
             self.process_constraints()
             x_new, hits_boundary = self.find_next_point()
             
