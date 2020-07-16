@@ -28,7 +28,8 @@ class CCBlade(BaseModel):
             desvars,
         )
         
-        outputs = wt_opt_ccblade["ccblade.CP"][0]
+        outputs = {}
+        outputs['CP'] = wt_opt_ccblade["ccblade.CP"][0]
             
         return outputs
 
@@ -45,6 +46,7 @@ class OpenFAST(BaseModel):
             desvars,
         )
         
-        outputs = wt_opt_openfast["aeroelastic.Cp"][0]
+        outputs = {}
+        outputs['CP'] = wt_opt_openfast["aeroelastic.Cp"][0]
         
         return outputs

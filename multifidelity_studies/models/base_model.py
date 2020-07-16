@@ -17,7 +17,7 @@ class BaseModel():
                     saved_data = dill.load(f)
                 self.saved_desvars = saved_data['desvars']
                 self.saved_outputs = saved_data['outputs']
-            
+                
         self.set_desvar_size_dict(desvars_init)
         
     def set_desvar_size_dict(self, desvars):
@@ -45,7 +45,7 @@ class BaseModel():
             
             if not np.all(flattened_desvars == saved_desvar):
                 same_inputs = False
-                break
+                continue
                     
             if same_inputs:
                 return self.saved_outputs[i]

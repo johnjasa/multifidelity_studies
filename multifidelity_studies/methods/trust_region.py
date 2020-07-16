@@ -52,7 +52,8 @@ class SimpleTrustRegion(BaseMethod):
         upper_bounds = np.minimum(trust_region_upper_bounds, self.bounds[:, 1])
         
         bounds = list(zip(lower_bounds, upper_bounds))
-        res = minimize(self.approximation_functions[self.objective], x0, method='SLSQP', tol=1e-10, bounds=bounds, constraints=self.list_of_constraints, options={'disp':False})
+        scaled_function = lambda x: self.objective_scaler * self.approximation_functions[self.objective](x)
+        res = minimize(scaled_function, x0, method='SLSQP', tol=1e-10, bounds=bounds, constraints=self.list_of_constraints, options={'disp':False})
         x_new = res.x
         
         tol = 1e-6
@@ -65,8 +66,12 @@ class SimpleTrustRegion(BaseMethod):
     
     def update_trust_region(self, x_new, hits_boundary):
         # 3. Compute the ratio of actual improvement to predicted improvement
-        actual_reduction = self.model_high.run(self.x[-1])[self.objective] - self.model_high.run(x_new)[self.objective]
-        predicted_reduction = self.model_high.run(self.x[-1])[self.objective] - self.approximation_functions[self.objective](x_new)
+        prev_point_high = self.objective_scaler * self.model_high.run(self.x[-1])[self.objective]
+        new_point_high = self.objective_scaler * self.model_high.run(x_new)[self.objective]
+        new_point_approx = self.objective_scaler * self.approximation_functions[self.objective](x_new)
+        
+        actual_reduction = prev_point_high - new_point_high
+        predicted_reduction = prev_point_high - new_point_approx
         
         # 4. Accept or reject the trial point according to that ratio
         # Unclear if this logic is needed; it's better to update the surrogate model with a bad point, even
