@@ -86,7 +86,7 @@ class BaseMethod():
         self.approximation_functions = approximation_functions
         
     def plot_functions(self):
-        n_plot = 5
+        n_plot = 9
         x_plot = np.linspace(self.bounds[0, 0], self.bounds[0, 1], n_plot)
         y_plot = np.linspace(self.bounds[1, 0], self.bounds[1, 1], n_plot)
         X, Y = np.meshgrid(x_plot, y_plot)
@@ -124,7 +124,7 @@ class BaseMethod():
         # plt.show()
         
         num_iter = self.x.shape[0]
-        num_offset = 10
+        num_offset = 3
         
         if num_iter <= 5:
             for i in range(num_offset):

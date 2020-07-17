@@ -85,9 +85,15 @@ class SimpleTrustRegion(BaseMethod):
         else:
             rho = actual_reduction / predicted_reduction
     
+        print()
+        print(prev_point_high)
+        print(new_point_high)
+        print(new_point_approx)
+        print(rho)
+        
         # 5. Update trust region according to rho_k
         eta = 0.25
-        if rho >= eta or hits_boundary:
+        if rho >= eta and hits_boundary:
             self.trust_radius = min(2*self.trust_radius, self.max_trust_radius)
         elif rho < eta:  # Unclear if this is the best check
             self.trust_radius *= 0.25
