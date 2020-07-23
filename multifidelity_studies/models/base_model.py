@@ -53,6 +53,8 @@ class BaseModel():
         self.desvar_sizes = OrderedDict()
         total_size = 0
         for key, value in desvars.items():
+            if isinstance(value, float):
+                value = np.array(value)
             self.desvar_sizes[key] = value.size
             total_size += value.size
         self.total_size = total_size
@@ -92,6 +94,9 @@ class BaseModel():
                 
         # Else, return None, so the function needs to be evaluated at this point
         return None
+        
+    def compute(self):
+        raise NotImplementedError("This method needs to be provided by the inheriting model class.")
         
     def run(self, flattened_desvars):
         """
