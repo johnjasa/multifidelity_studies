@@ -50,13 +50,16 @@ class BaseModel():
         need a flattened array of input values, not a dictionary of keys
         and desvars.
         """
-        self.desvar_sizes = OrderedDict()
+        self.desvar_shapes = OrderedDict()
         total_size = 0
+        
         for key, value in desvars.items():
-            if isinstance(value, float):
+            if isinstance(value, (float, list)):
                 value = np.array(value)
-            self.desvar_sizes[key] = value.size
+                
+            self.desvar_shapes[key] = value.shape
             total_size += value.size
+            
         self.total_size = total_size
     
     def save_results(self, desvars, outputs):
@@ -154,7 +157,9 @@ class BaseModel():
         flattened_desvars = []
         
         for key, value in desvars.items():
-            flattened_value = np.squeeze(value)
+            if isinstance(value, (float, list)):
+                value = np.array(value)
+            flattened_value = np.atleast_1d(np.squeeze(value.flatten()))
             flattened_desvars.extend(flattened_value)
             
         return np.array(flattened_desvars)
@@ -165,8 +170,9 @@ class BaseModel():
         """
         size_counter = 0
         desvars = OrderedDict()
-        for key, size in self.desvar_sizes.items():
-            desvars[key] = flattened_desvars[size_counter:size_counter+size]
+        for key, shape in self.desvar_shapes.items():
+            size = int(np.prod(shape))
+            desvars[key] = flattened_desvars[size_counter:size_counter+size].reshape(shape)
             size_counter += size
             
         return desvars

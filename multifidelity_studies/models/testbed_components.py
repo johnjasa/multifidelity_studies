@@ -44,6 +44,12 @@ class simple_2D_low_model(BaseModel):
         outputs['con'] = np.sum(desvars['x']) + desvars['x'][1]**2 * outputs['y']
         return outputs
         
+class model_with_nd_outputs(BaseModel):
+    def compute(self, desvars):
+        outputs = {}
+        outputs['y'] = np.diag(desvars['x']**2)
+        return outputs
+        
         
 class barnes_high_model(BaseModel):
     def compute(self, desvars):
