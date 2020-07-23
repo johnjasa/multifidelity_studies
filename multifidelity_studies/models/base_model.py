@@ -21,6 +21,13 @@ class BaseModel():
         
         If `warmstart_file` is given, load saved results from there and
         save off future function call results to that pickle file.
+        
+        Parameters
+        ----------
+        desvars_init : dict of desvars
+            A dict containing keys with the names of desvars and the corresponding
+            values are representative of the desvar size and shape. These values
+            are not used; only their shape
         """
         
         self.saved_desvars = []
@@ -49,6 +56,12 @@ class BaseModel():
         This is needed because the Scipy optimizer and surrogate models
         need a flattened array of input values, not a dictionary of keys
         and desvars.
+        
+        Parameters
+        ----------
+        desvars : dict of desvars
+            These desvars are simply used to record the size and shape of each
+            desvar for use later when flattening/unflattening desvars.
         """
         self.desvar_shapes = OrderedDict()
         total_size = 0
@@ -65,6 +78,13 @@ class BaseModel():
     def save_results(self, desvars, outputs):
         """
         Save results to attribute lists and to the pickle file if provided.
+        
+        Parameters
+        ----------
+        desvars : dict of desvars
+            Keys and values for desvars to save.
+        outputs : dict of outputs
+            Keys and values for output values from `compute()` to save.
         """
         self.saved_desvars.append(self.flatten_desvars(desvars))
         self.saved_outputs.append(outputs)
@@ -81,6 +101,17 @@ class BaseModel():
         """
         Load results from the attribute lists for design points that have
         been previously evaluated.
+        
+        Parameters
+        ----------
+        flattened_desvars : array
+            Flattened array of all desvar values at the desired design point.
+        
+        Returns
+        -------
+        outputs : dict or None
+            If there are saved outputs, the dict contains those key/value
+            output pairs. Otherweise, the return value is None. 
         """
         for i, saved_desvar in enumerate(self.saved_desvars):
             same_inputs = True
@@ -110,6 +141,17 @@ class BaseModel():
         values, not the desvar dictionary. This makes it slightly easier
         to compare the input values and reduces the amount of translation needed
         for the optimization and surrgoate methods.
+        
+        Parameters
+        ----------
+        flattened_desvars : array
+            Flattened array of all desvar values at the desired design point.
+        
+        Returns
+        -------
+        outputs : dict
+            Returned dict of outputs from the `compute()` method provided by
+            the user-defined model.
         """
         # Load results from previous run
         loaded_results = self.load_results(flattened_desvars)
@@ -126,14 +168,25 @@ class BaseModel():
         else:
             return loaded_results
         
-    def run_vec(self, x):
+    def run_vec(self, multiple_flattened_desvars):
         """
         Light wrapper to run the model at multiple design points.
+        
+        Parameters
+        ----------
+        multiple_flattened_desvars : array
+            2D array of flattened desvars to query the model.
+            
+        Returns
+        -------
+        dict_of_results : dict
+            Dict of key/array pairs where the arrays contain results
+            for all of the design points listed in multiple_flattened_desvars.
         """ 
         dict_of_results = {}
         
         # Loop through each row of design variable arrays
-        for i, flattened_desvars in enumerate(x):
+        for i, flattened_desvars in enumerate(multiple_flattened_desvars):
             
             # Actually run the model (or grab saved results) at that design point
             outputs = self.run(flattened_desvars)
@@ -153,6 +206,16 @@ class BaseModel():
     def flatten_desvars(self, desvars):
         """
         Given a dict of desvars, return a flattened array of desvar values.
+        
+        Parameters
+        ----------
+        desvars : dict
+            Dict of desvar keys/values.
+            
+        Returns
+        -------
+        flattened_desvars : array
+            Flattened array of desvar values.
         """
         flattened_desvars = []
         
@@ -167,6 +230,16 @@ class BaseModel():
     def unflatten_desvars(self, flattened_desvars):
         """
         Given a flattened array of desvar values, return a dict of desvars.
+        
+        Parameters
+        ----------
+        flattened_desvars : array
+            Flattened array of desvar values.
+            
+        Returns
+        -------
+        desvars : dict
+            Dict of desvar keys/values.
         """
         size_counter = 0
         desvars = OrderedDict()

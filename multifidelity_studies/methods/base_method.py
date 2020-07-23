@@ -28,6 +28,9 @@ class BaseMethod():
         x_init_raw = np.random.rand(num_initial_points, self.n_dims)
         self.x = x_init_raw * (self.bounds[:, 1] - self.bounds[:, 0]) + self.bounds[:, 0]
         
+    def set_initial_point(self, x):
+        self.x = np.hstack((self.x, x))
+        
     def add_objective(self, objective_name, scaler=1.0):
         self.objective = objective_name
         self.objective_scaler = scaler
