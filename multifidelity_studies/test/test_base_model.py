@@ -21,7 +21,7 @@ class Test(unittest.TestCase):
         model = BaseModel(desvars_init)
         
         with self.assertRaises(NotImplementedError) as raises_msg:
-            model.compute()
+            model.compute(desvars_init)
             
         exception = raises_msg.exception
         msg =  "This method needs to be provided by the inheriting model class."

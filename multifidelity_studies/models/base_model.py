@@ -129,7 +129,21 @@ class BaseModel():
         # Else, return None, so the function needs to be evaluated at this point
         return None
         
-    def compute(self):
+    def compute(self, desvars):
+        """
+        Method to actually compute function outputs given desvars, needs to be
+        implemented by the user in their model.
+        
+        Parameters
+        ----------
+        desvars : dict
+            Dict of desvar keys/values.
+            
+        Returns
+        -------
+        outputs : dict
+            Dict of output keys/values.
+        """
         raise NotImplementedError("This method needs to be provided by the inheriting model class.")
         
     def run(self, flattened_desvars):

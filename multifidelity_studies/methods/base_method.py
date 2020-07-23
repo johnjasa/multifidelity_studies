@@ -10,9 +10,10 @@ class BaseMethod():
     The base class that all multifidelity optimization methods inherit from.
     
     """
-    def __init__(self, model_low, model_high, bounds, num_initial_points=5):
+    def __init__(self, model_low, model_high, bounds, disp=True, num_initial_points=5):
         
         self.bounds = np.array(bounds)
+        self.disp = disp
         
         self.model_low = model_low
         self.model_high = model_high
@@ -29,7 +30,9 @@ class BaseMethod():
         self.x = x_init_raw * (self.bounds[:, 1] - self.bounds[:, 0]) + self.bounds[:, 0]
         
     def set_initial_point(self, x):
-        self.x = np.hstack((self.x, x))
+        if isinstance(x, (float, list)):
+            x = np.array(x)
+        self.x = np.vstack((self.x, x))
         
     def add_objective(self, objective_name, scaler=1.0):
         self.objective = objective_name

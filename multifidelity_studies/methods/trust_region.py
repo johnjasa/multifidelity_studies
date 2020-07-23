@@ -11,8 +11,8 @@ from multifidelity_studies.methods.base_method import BaseMethod
 
 class SimpleTrustRegion(BaseMethod):
     
-    def __init__(self, model_low, model_high, bounds, num_initial_points=5, max_trust_radius=1000., eta=0.15, gtol=1e-4, trust_radius=0.2):
-        super().__init__(model_low, model_high, bounds, num_initial_points)
+    def __init__(self, model_low, model_high, bounds, disp=True, num_initial_points=5, max_trust_radius=1000., eta=0.15, gtol=1e-4, trust_radius=0.2):
+        super().__init__(model_low, model_high, bounds, disp, num_initial_points)
         
         self.max_trust_radius = max_trust_radius
         self.eta = eta
@@ -76,7 +76,8 @@ class SimpleTrustRegion(BaseMethod):
         # 4. Accept or reject the trial point according to that ratio
         # Unclear if this logic is needed; it's better to update the surrogate model with a bad point, even
         if predicted_reduction <= 0:
-            print('not enough reduction! rejecting point')
+            if self.disp:
+                print('not enough reduction! rejecting point')
         else:
             self.x = np.vstack((self.x, np.atleast_2d(x_new)))
             
@@ -84,12 +85,6 @@ class SimpleTrustRegion(BaseMethod):
             rho = 0.
         else:
             rho = actual_reduction / predicted_reduction
-    
-        print()
-        print(prev_point_high)
-        print(new_point_high)
-        print(new_point_approx)
-        print(rho)
         
         # 5. Update trust region according to rho_k
         eta = 0.25
@@ -97,7 +92,12 @@ class SimpleTrustRegion(BaseMethod):
             self.trust_radius = min(2*self.trust_radius, self.max_trust_radius)
         elif rho < eta:  # Unclear if this is the best check
             self.trust_radius *= 0.25
-        print('trust radius', self.trust_radius)
+            
+        if self.disp:
+            print()
+            print('Predicted reduction:', predicted_reduction[0][0])
+            print('Actual reduction:', actual_reduction)
+            print('Trust radius:', self.trust_radius)
             
     def optimize(self, plot=False):
         self.construct_approximations()
@@ -122,8 +122,9 @@ class SimpleTrustRegion(BaseMethod):
             if self.trust_radius <= 1e-6:
                 break
                 
-        print()
-        print("Found optimal point!")
-        print(self.x[-1, :])
-        print(self.model_high.run(self.x[-1, :])[self.objective])
+        if self.disp:
+            print()
+            print("Found optimal point!")
+            print(self.x[-1, :])
+            print(self.model_high.run(self.x[-1, :])[self.objective])
         
