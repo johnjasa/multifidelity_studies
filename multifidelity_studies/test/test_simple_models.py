@@ -21,8 +21,8 @@ class Test(unittest.TestCase):
         flattened_desvars_2d = np.array([[2., 1.], [1., 0.5]])
         
         outputs = model.run_vec(flattened_desvars_2d)
-        np.testing.assert_almost_equal(outputs['y'], [18., 0.5])
-        np.testing.assert_almost_equal(outputs['con'], [3., 1.5])
+        np.testing.assert_allclose(outputs['y'], [18., 0.5])
+        np.testing.assert_allclose(outputs['con'], [3., 1.5])
         
     def test_save_outputs(self):
         desvars_init = {}
@@ -55,7 +55,7 @@ class Test(unittest.TestCase):
         flattened_desvars = model.flatten_desvars(desvars_init)
         
         outputs = model.run(flattened_desvars)
-        np.testing.assert_almost_equal(outputs['y'], np.array([[4., 0.], [0., 1.]]))
+        np.testing.assert_allclose(outputs['y'], np.array([[4., 0.], [0., 1.]]))
         
     def test_nd_outputs(self):
         desvars_init = {}
@@ -67,10 +67,10 @@ class Test(unittest.TestCase):
         flattened_desvars = model.flatten_desvars(desvars_init)
         
         outputs = model.run(flattened_desvars)
-        np.testing.assert_almost_equal(outputs['y'], np.diag([4., 1., 0.25]))
+        np.testing.assert_allclose(outputs['y'], np.diag([4., 1., 0.25]))
         
         outputs = model.run(flattened_desvars)
-        np.testing.assert_almost_equal(outputs['y'], np.diag([4., 1., 0.25]))
+        np.testing.assert_allclose(outputs['y'], np.diag([4., 1., 0.25]))
         
         # Should only have called the model once
         self.assertEqual(len(model.saved_desvars), 1)

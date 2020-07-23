@@ -12,6 +12,15 @@ from multifidelity_studies.methods.base_method import BaseMethod
 class SimpleTrustRegion(BaseMethod):
     
     def __init__(self, model_low, model_high, bounds, disp=True, num_initial_points=5, max_trust_radius=1000., eta=0.15, gtol=1e-4, trust_radius=0.2):
+        """
+        
+        Parameters
+        ----------
+        
+        Returns
+        -------
+        
+        """
         super().__init__(model_low, model_high, bounds, disp, num_initial_points)
         
         self.max_trust_radius = max_trust_radius
@@ -20,6 +29,15 @@ class SimpleTrustRegion(BaseMethod):
         self.trust_radius = trust_radius
         
     def process_constraints(self):
+        """
+        
+        Parameters
+        ----------
+        
+        Returns
+        -------
+        
+        """
         list_of_constraints = []
         for constraint in self.constraints:
             scipy_constraint = {}
@@ -43,6 +61,15 @@ class SimpleTrustRegion(BaseMethod):
             
         
     def find_next_point(self):
+        """
+        
+        Parameters
+        ----------
+        
+        Returns
+        -------
+        
+        """
         x0 = self.x[-1, :]
         
         # min (m_k(x_k + s_k)) st ||x_k|| <= del K
@@ -65,6 +92,15 @@ class SimpleTrustRegion(BaseMethod):
         return x_new, hits_boundary
     
     def update_trust_region(self, x_new, hits_boundary):
+        """
+        
+        Parameters
+        ----------
+        
+        Returns
+        -------
+        
+        """
         # 3. Compute the ratio of actual improvement to predicted improvement
         prev_point_high = self.objective_scaler * self.model_high.run(self.x[-1])[self.objective]
         new_point_high = self.objective_scaler * self.model_high.run(x_new)[self.objective]
@@ -100,6 +136,15 @@ class SimpleTrustRegion(BaseMethod):
             print('Trust radius:', self.trust_radius)
             
     def optimize(self, plot=False):
+        """
+        
+        Parameters
+        ----------
+        
+        Returns
+        -------
+        
+        """
         self.construct_approximations()
         self.process_constraints()
         
@@ -128,3 +173,60 @@ class SimpleTrustRegion(BaseMethod):
             print(self.x[-1, :])
             print(self.model_high.run(self.x[-1, :])[self.objective])
         
+    def plot_functions(self):
+        """
+        
+        Parameters
+        ----------
+        
+        Returns
+        -------
+        
+        """
+        n_plot = 9
+        x_plot = np.linspace(self.bounds[0, 0], self.bounds[0, 1], n_plot)
+        y_plot = np.linspace(self.bounds[1, 0], self.bounds[1, 1], n_plot)
+        X, Y = np.meshgrid(x_plot, y_plot)
+        x_values = np.vstack((X.flatten(), Y.flatten())).T
+        
+        y_plot_high = self.model_high.run_vec(x_values)[self.objective].reshape(n_plot, n_plot)
+        
+        # surrogate = []
+        # for x_value in x_values:
+        #     surrogate.append(np.squeeze(self.approximation_functions['con'](x_value)))
+        # surrogate = np.array(surrogate)
+        # y_plot_high = surrogate.reshape(n_plot, n_plot)
+        
+        plt.figure(figsize=(6, 6))
+        plt.contourf(X, Y, y_plot_high, levels=101)
+        plt.scatter(self.x[:, 0], self.x[:, 1], color='white')
+        
+        x = self.x[-1, 0]
+        y = self.x[-1, 1]
+        points = np.array([
+            [x + self.trust_radius, y + self.trust_radius],
+            [x + self.trust_radius, y - self.trust_radius],
+            [x - self.trust_radius, y - self.trust_radius],
+            [x - self.trust_radius, y + self.trust_radius],
+            [x + self.trust_radius, y + self.trust_radius],
+            ])
+        plt.plot(points[:, 0], points[:, 1], 'w--')
+        
+        plt.xlim(self.bounds[0])
+        plt.ylim(self.bounds[1])
+        
+        plt.xlabel('x0')
+        plt.ylabel('x1')
+        
+        # plt.show()
+        
+        num_iter = self.x.shape[0]
+        num_offset = 3
+        
+        if num_iter <= 5:
+            for i in range(num_offset):
+                plt.savefig(f'image_{self.counter}.png', dpi=300)
+                self.counter += 1
+        else:
+            plt.savefig(f'image_{self.counter}.png', dpi=300)
+            self.counter += 1

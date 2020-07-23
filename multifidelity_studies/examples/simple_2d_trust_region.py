@@ -13,6 +13,7 @@ model_high = simple_2D_high_model(desvars)
 trust_region = SimpleTrustRegion(model_low, model_high, bounds)
 
 trust_region.add_objective('y')
-trust_region.add_constraint('con', upper=0.2)
+
+trust_region.set_initial_point(desvars['x'])
 
 trust_region.optimize()
