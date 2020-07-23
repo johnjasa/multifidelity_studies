@@ -11,8 +11,8 @@ from multifidelity_studies.methods.base_method import BaseMethod
 
 class SimpleTrustRegion(BaseMethod):
     
-    def __init__(self, model_low, model_high, bounds, max_trust_radius=1000., eta=0.15, gtol=1e-4, trust_radius=0.2):
-        super().__init__(model_low, model_high, bounds)
+    def __init__(self, model_low, model_high, bounds, num_initial_points=5, max_trust_radius=1000., eta=0.15, gtol=1e-4, trust_radius=0.2):
+        super().__init__(model_low, model_high, bounds, num_initial_points)
         
         self.max_trust_radius = max_trust_radius
         self.eta = eta

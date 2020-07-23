@@ -1,14 +1,15 @@
-# base method class
 import numpy as np
 from scipy.interpolate import Rbf
-from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from collections import OrderedDict
 import smt.surrogate_models as smt
 
 
 class BaseMethod():
+    """
+    The base class that all multifidelity optimization methods inherit from.
     
+    """
     def __init__(self, model_low, model_high, bounds, num_initial_points=5):
         
         self.bounds = np.array(bounds)
