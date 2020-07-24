@@ -17,7 +17,7 @@ xfoil:
 rotorse:
     n_aoa: 200        # Number of angles of attack used to define polars
     n_xy: 200         # Number of angles of coordinate points used to discretize each airfoil
-    n_span: 30        # Number of spanwise stations used to define the blade properties
+    n_span: 10        # Number of spanwise stations used to define the blade properties
 
 openfast:
     run_openfast: False          # Flag to run aeroelasticse, the wrapper of OpenFAST

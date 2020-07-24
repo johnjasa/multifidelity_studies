@@ -54,26 +54,20 @@ class OpenFAST(BaseModel):
 
 
 class CCBlade(BaseModel):
+    def __init__(self, desvars_init, warmstart_file=None, n_span=30):
+        super().__init__(desvars_init, warmstart_file)
+        self.n_span = n_span
+
     def compute(self, desvars):
         
-        with open('CCBlade_inputs.pkl', 'rb') as f:
+        with open(f'CCBlade_inputs_{self.n_span}.pkl', 'rb') as f:
             saved_dict = dill.load(f)
         
         chord_opt_gain = desvars['blade.opt_var.chord_opt_gain']
 
-        chord_original = np.array([5.2       , 5.22814651, 5.32105729, 5.45815745, 5.60229318,
-        5.71827031, 5.76707382, 5.71284486, 5.53647944, 5.29094421,
-        5.03450401, 4.81470288, 4.62321904, 4.43204464, 4.24515221,
-        4.06546765, 3.89602837, 3.73506076, 3.57914991, 3.42460161,
-        3.26800581, 3.11191777, 2.95713751, 2.79989844, 2.6365298 ,
-        2.46395353, 2.28349782, 2.09593192, 1.90186155, 0.5       ])
-        s_opt_chord = np.linspace(0., 1., len(chord_opt_gain))
-        s = np.array([0.        , 0.03448276, 0.06896552, 0.10344828, 0.13793103,
-        0.17241379, 0.20689655, 0.24137931, 0.27586207, 0.31034483,
-        0.34482759, 0.37931034, 0.4137931 , 0.44827586, 0.48275862,
-        0.51724138, 0.55172414, 0.5862069 , 0.62068966, 0.65517241,
-        0.68965517, 0.72413793, 0.75862069, 0.79310345, 0.82758621,
-        0.86206897, 0.89655172, 0.93103448, 0.96551724, 1.        ])
+        chord_original = saved_dict['chord_original']
+        s_opt_chord = saved_dict['s_opt_chord']
+        s = saved_dict['s']
         
         spline         = PchipInterpolator
         chord_spline            = spline(s_opt_chord, chord_opt_gain)
