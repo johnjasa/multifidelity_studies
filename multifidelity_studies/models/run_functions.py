@@ -20,6 +20,13 @@ fname_wt_output = folder_output + "temp.yaml"
 
 
 class FullCCBlade(BaseModel):
+    """
+    Call the full WISDEM stack and focus on results from CCBlade.
+    
+    This calls WISDEM using the yaml files and all normal entry points, but
+    has the additional overhead of unnecessary analyses.
+    """
+
     def compute(self, desvars):
         wt_opt_ccblade, analysis_options_ccblade, opt_options_ccblade = run_wisdem(
             fname_wt_input,
@@ -37,6 +44,15 @@ class FullCCBlade(BaseModel):
 
 
 class OpenFAST(BaseModel):
+    """
+    Call the full WISDEM stack and focus on results from OpenFAST.
+    
+    This calls WISDEM using the yaml files and all normal entry points, but
+    has the additional overhead of unnecessary analyses. However, OpenFAST
+    is generally more expensive than the other portions of WISDEM, making this
+    less important.
+    """
+
     def compute(self, desvars):
         wt_opt_openfast, analysis_options_openfast, opt_options_openfast = run_wisdem(
             fname_wt_input,
@@ -54,57 +70,72 @@ class OpenFAST(BaseModel):
 
 
 class CCBlade(BaseModel):
+    """
+    Call only CCBlade as a standalone function using saved inputs.
+    
+    To ensure we're running the correct geometry, you need to first run
+    FullCCBlade to save off some pickle files with info needed for this model.
+    However, this model is much faster than the full WISDEM version because it
+    doesn't call other analyses unnecessarily. For a quick test, this is
+    about 320x faster.
+    """
+
     def __init__(self, desvars_init, warmstart_file=None, n_span=30):
         super().__init__(desvars_init, warmstart_file)
         self.n_span = n_span
 
     def compute(self, desvars):
-        with open(f'CCBlade_inputs_{self.n_span}.pkl', 'rb') as f:
+        with open(f"CCBlade_inputs_{self.n_span}.pkl", "rb") as f:
             saved_dict = dill.load(f)
-        
-        chord_opt_gain = desvars['blade.opt_var.chord_opt_gain']
 
-        chord_original = saved_dict['chord_original']
-        s = saved_dict['s']
-        s_opt_chord = np.linspace(0., 1., len(chord_opt_gain))
-        
-        spline         = PchipInterpolator
-        chord_spline            = spline(s_opt_chord, chord_opt_gain)
-        chord  = chord_original * chord_spline(s)
-        
-        get_cp_cm = CCBladeOrig(saved_dict['r'],
+        chord_opt_gain = desvars["blade.opt_var.chord_opt_gain"]
+
+        chord_original = saved_dict["chord_original"]
+        s = saved_dict["s"]
+        s_opt_chord = np.linspace(0.0, 1.0, len(chord_opt_gain))
+
+        spline = PchipInterpolator
+        chord_spline = spline(s_opt_chord, chord_opt_gain)
+        chord = chord_original * chord_spline(s)
+
+        get_cp_cm = CCBladeOrig(
+            saved_dict["r"],
             chord,
-            saved_dict['twist'],
-            saved_dict['af'],
-            saved_dict['Rhub'],
-            saved_dict['Rtip'],
-            saved_dict['nBlades'],
-            saved_dict['rho'],
-            saved_dict['mu'],
-            saved_dict['precone'],
-            saved_dict['tilt'],
-            saved_dict['yaw'],
-            saved_dict['shearExp'],
-            saved_dict['hub_height'],
-            saved_dict['nSector'],
-            saved_dict['precurve'],
-            saved_dict['precurveTip'],
-            saved_dict['presweep'],
-            saved_dict['presweepTip'],
-            saved_dict['tiploss'],
-            saved_dict['hubloss'],
-            saved_dict['wakerotation'],
-            saved_dict['usecd'],
-            )   
+            saved_dict["twist"],
+            saved_dict["af"],
+            saved_dict["Rhub"],
+            saved_dict["Rtip"],
+            saved_dict["nBlades"],
+            saved_dict["rho"],
+            saved_dict["mu"],
+            saved_dict["precone"],
+            saved_dict["tilt"],
+            saved_dict["yaw"],
+            saved_dict["shearExp"],
+            saved_dict["hub_height"],
+            saved_dict["nSector"],
+            saved_dict["precurve"],
+            saved_dict["precurveTip"],
+            saved_dict["presweep"],
+            saved_dict["presweepTip"],
+            saved_dict["tiploss"],
+            saved_dict["hubloss"],
+            saved_dict["wakerotation"],
+            saved_dict["usecd"],
+        )
         get_cp_cm.inverse_analysis = False
-        get_cp_cm.induction        = True
+        get_cp_cm.induction = True
 
         # Compute omega given TSR
-        Omega   = saved_dict['Uhub']*saved_dict['tsr']/saved_dict['Rtip'] * 30.0/np.pi
+        Omega = (
+            saved_dict["Uhub"] * saved_dict["tsr"] / saved_dict["Rtip"] * 30.0 / np.pi
+        )
 
-        myout, derivs = get_cp_cm.evaluate([saved_dict['Uhub']], [Omega], [saved_dict['pitch']], coefficients=True)
-        
+        myout, derivs = get_cp_cm.evaluate(
+            [saved_dict["Uhub"]], [Omega], [saved_dict["pitch"]], coefficients=True
+        )
+
         outputs = {}
-        outputs["CP"] = myout['CP']
+        outputs["CP"] = myout["CP"]
 
         return outputs
