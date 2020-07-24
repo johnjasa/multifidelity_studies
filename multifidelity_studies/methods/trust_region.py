@@ -210,6 +210,7 @@ class SimpleTrustRegion(BaseMethod):
             print("Found optimal point!")
             print(self.x[-1, :])
             print(self.model_high.run(self.x[-1, :])[self.objective])
+            print(len(self.x[:, 0]), 'high fidelity calls')
 
     def plot_functions(self):
         """

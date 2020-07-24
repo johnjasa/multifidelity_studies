@@ -59,15 +59,14 @@ class CCBlade(BaseModel):
         self.n_span = n_span
 
     def compute(self, desvars):
-        
         with open(f'CCBlade_inputs_{self.n_span}.pkl', 'rb') as f:
             saved_dict = dill.load(f)
         
         chord_opt_gain = desvars['blade.opt_var.chord_opt_gain']
 
         chord_original = saved_dict['chord_original']
-        s_opt_chord = saved_dict['s_opt_chord']
         s = saved_dict['s']
+        s_opt_chord = np.linspace(0., 1., len(chord_opt_gain))
         
         spline         = PchipInterpolator
         chord_spline            = spline(s_opt_chord, chord_opt_gain)
