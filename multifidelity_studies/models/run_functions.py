@@ -17,7 +17,6 @@ fname_wt_output = folder_output + "temp.yaml"
 
 
 class CCBlade(BaseModel):
-    
     def compute(self, desvars):
         wt_opt_ccblade, analysis_options_ccblade, opt_options_ccblade = run_wisdem(
             fname_wt_input,
@@ -27,15 +26,14 @@ class CCBlade(BaseModel):
             folder_output,
             desvars,
         )
-        
+
         outputs = {}
-        outputs['CP'] = wt_opt_ccblade["ccblade.CP"][0]
-            
+        outputs["CP"] = wt_opt_ccblade["ccblade.CP"][0]
+
         return outputs
 
 
 class OpenFAST(BaseModel):
-        
     def compute(self, desvars):
         wt_opt_openfast, analysis_options_openfast, opt_options_openfast = run_wisdem(
             fname_wt_input,
@@ -45,8 +43,8 @@ class OpenFAST(BaseModel):
             folder_output,
             desvars,
         )
-        
+
         outputs = {}
-        outputs['CP'] = wt_opt_openfast["aeroelastic.Cp"][0]
-        
+        outputs["CP"] = wt_opt_openfast["aeroelastic.Cp"][0]
+
         return outputs
