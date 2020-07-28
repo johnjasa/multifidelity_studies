@@ -11,19 +11,38 @@ class BaseMethod:
 
     Attributes
     ----------
-    bounds
-    disp
-    model_low
-    model_high
-    counter
-    objective
-    constraints
-    n_dims
-    x
-    objective
-    objective_scaler
-    approximation_functions
-    
+    model_low : BaseModel instance
+        The low-fidelity model instance provided by the user.
+    model_high : BaseModel instance
+        The high-fidelity model instance provided by the user.
+    bounds : array
+        A 2D array of design variable bounds, e.g. [[0., 1.], ...] for
+        each design variable.
+    disp : bool, optional
+        If True, the method will print out progress and results to the terminal.
+    counter_plot : int
+        Int for the number of plots that have been created so the filenames
+        are saved correctly.
+    objective : string
+        Name of the objective function whose output is provided by the user-provided
+        models.
+    objective_scaler : float
+        Multiplicative scaling factor applied to the objective function before
+        passing it to the optimizer. Useful for mamximizing functions instead
+        of minimizing them by providing a negative number.
+    constraints : list of dicts
+        Each dict contains the constraint output name, the constraint type (equality
+        or inequality), and the constraint value. One dict for each set of constraints.
+    n_dims : int
+        Number of dimensions in the design space, i.e. number of design variables.
+    x : array
+        2-D array containing all of the queried design points. Rows (the 2nd dimension)
+        contain the design vectors, whereas the number of columns (the 1st dimension)
+        correspond to the number of design points.
+    approximation_functions : dict of callables
+        Dictionary whose keys are the string names of all functions of interest
+        (objective and all constraints) and the corresponding values are callable
+        funcs for an approximation of those values across the design space.    
     """
 
     def __init__(self, model_low, model_high, bounds, disp=True, num_initial_points=5):
@@ -55,19 +74,23 @@ class BaseMethod:
         self.model_high = model_high
 
         self.initialize_points(num_initial_points)
-        self.counter = 0
+        self.counter_plot = 0
 
         self.objective = None
         self.constraints = []
 
     def initialize_points(self, num_initial_points):
         """
+        Populate the x array with a set of initial points that will be used
+        to create the initial surrogate models.
+        
+        Modifies `x` in-place.
         
         Parameters
         ----------
-        
-        Returns
-        -------
+        num_initial_points : int
+            Number of points used to populate the initial surrogate model creation.
+            These points are called using both the low- and high-fidelity models.
         
         """
         self.n_dims = self.model_high.total_size
@@ -76,28 +99,35 @@ class BaseMethod:
             x_init_raw * (self.bounds[:, 1] - self.bounds[:, 0]) + self.bounds[:, 0]
         )
 
-    def set_initial_point(self, x):
+    def set_initial_point(self, initial_design):
         """
+        Set the initial point for the optimization method.
+        
+        Modifies `x` in-place.
         
         Parameters
         ----------
-        
-        Returns
-        -------
+        initial_design : array
+            Initial design point for the optimization method.
         
         """
-        if isinstance(x, (float, list)):
-            x = np.array(x)
-        self.x = np.vstack((self.x, x))
+        if isinstance(initial_design, (float, list)):
+            initial_design = np.array(initial_design)
+        self.x = np.vstack((self.x, initial_design))
 
     def add_objective(self, objective_name, scaler=1.0):
         """
+        Set the optimization objective string and scaler.
         
         Parameters
         ----------
-        
-        Returns
-        -------
+        objective : string
+            Name of the objective function whose output is provided by the user-provided
+            models.
+        scaler : float
+            Multiplicative scaling factor applied to the objective function before
+            passing it to the optimizer. Useful for mamximizing functions instead
+            of minimizing them by providing a negative number.
         
         """
         self.objective = objective_name
@@ -105,12 +135,21 @@ class BaseMethod:
 
     def add_constraint(self, constraint_name, equals=None, lower=None, upper=None):
         """
+        Append user-defined constraints into a list of dicts with all constraint
+        info to be used later.
+        
+        Modifies `constraints` in-place.
         
         Parameters
         ----------
-        
-        Returns
-        -------
+        constraint_name : string
+            Name of the output value to constrain.
+        equals : float or None
+            If a float, the value at which to constrain the output.
+        lower : float or None
+            If a float, the value of the lower bound for the constraint.
+        upper : float or None
+            If a float, the value of the upper bound for the constraint.
         
         """
         self.constraints.append(
@@ -119,12 +158,31 @@ class BaseMethod:
 
     def construct_approximations(self, interp_method="smt"):
         """
+        Create callable functions for each of the corrected low-fidelity
+        models by constructing surrogate models for the error between
+        low- and high-fidelity results.
+        
+        Follows the process laid out by multiple trust-region methods presented
+        in the literature where we construct a corrected low-fidelity model.
+        This correction comes from a surrogate model trained by the error between
+        the low- and high-fidelity models. Each call to one of these callable
+        funcs runs the low-fidelity model and queries the surrogate model at
+        that design point to obtain the corrected output.
+        
+        This method create approximation functions for the objective function and
+        all constraints in the same way.
+        
+        Depending on the smoothness of the underlying functions, certain surrogate
+        models may be better suited to model the error between the models.
+        Future studies could focus on when to use which surrogate model.
+        
+        Modifies `approximation_functions` in-place.
         
         Parameters
         ----------
-        
-        Returns
-        -------
+        interp_method : string
+            Set the type of surrogate model method to use, valid options are 'rbf'
+            and 'smt' for now. 
         
         """
         outputs_low = self.model_low.run_vec(self.x)

@@ -268,8 +268,8 @@ class SimpleTrustRegion(BaseMethod):
 
         if num_iter <= 5:
             for i in range(num_offset):
-                plt.savefig(f"image_{self.counter}.png", dpi=300)
-                self.counter += 1
+                plt.savefig(f"image_{self.counter_plot}.png", dpi=300)
+                self.counter_plot += 1
         else:
-            plt.savefig(f"image_{self.counter}.png", dpi=300)
-            self.counter += 1
+            plt.savefig(f"image_{self.counter_plot}.png", dpi=300)
+            self.counter_plot += 1
