@@ -13,6 +13,27 @@ from multifidelity_studies.methods.base_method import BaseMethod
 
 
 class SimpleTrustRegion(BaseMethod):
+    """
+    An implementation of a simple trust-region method, following
+    the literature as presented in multiple places, but especially
+    Andrew March's dissertation.
+
+    Attributes
+    ----------
+    max_trust_radius : float
+        Maximum size of the trust region radius. Not scaled, so this value
+        is in real dimensioned values of the design space.
+    eta : float
+        Value to compare the ratio of actual reduction to predicted reduction
+        of the objective value. A ratio higher than eta expands the trust region
+        whereas a value lower than eta contracts the trust region.        
+    gtol : float
+        Tolerance of the gradient for convergence criteria. If the norm
+        of the gradient at the current design point is less than gtol,
+        terminate the trust region method. Currently not implemented.
+    trust_radius : float
+        The current value of the trust region radius in dimensioned units.
+    """
     def __init__(
         self,
         model_low,
@@ -21,17 +42,29 @@ class SimpleTrustRegion(BaseMethod):
         disp=True,
         num_initial_points=5,
         max_trust_radius=1000.0,
-        eta=0.15,
+        eta=0.25,
         gtol=1e-4,
         trust_radius=0.2,
     ):
         """
+        Initialize the trust region method and store the user-defined options.
         
         Parameters
         ----------
+        max_trust_radius : float
+            Maximum size of the trust region radius. Not scaled, so this value
+            is in real dimensioned values of the design space.
+        eta : float
+            Value to compare the ratio of actual reduction to predicted reduction
+            of the objective value. A ratio higher than eta expands the trust region
+            whereas a value lower than eta contracts the trust region.        
+        gtol : float
+            Tolerance of the gradient for convergence criteria. If the norm
+            of the gradient at the current design point is less than gtol,
+            terminate the trust region method. Currently not implemented.
+        trust_radius : float
+            The current value of the trust region radius in dimensioned units.
         
-        Returns
-        -------
         
         """
         super().__init__(model_low, model_high, bounds, disp, num_initial_points)
@@ -41,52 +74,22 @@ class SimpleTrustRegion(BaseMethod):
         self.gtol = gtol
         self.trust_radius = trust_radius
 
-    def process_constraints(self):
-        """
-        
-        Parameters
-        ----------
-        
-        Returns
-        -------
-        
-        """
-        list_of_constraints = []
-        for constraint in self.constraints:
-            scipy_constraint = {}
-
-            func = self.approximation_functions[constraint["name"]]
-            if constraint["equals"] is not None:
-                scipy_constraint["type"] = "eq"
-                scipy_constraint["fun"] = lambda x: np.squeeze(
-                    func(x) - constraint["equals"]
-                )
-
-            if constraint["upper"] is not None:
-                scipy_constraint["type"] = "ineq"
-                scipy_constraint["fun"] = lambda x: np.squeeze(
-                    constraint["upper"] - func(x)
-                )
-
-            if constraint["lower"] is not None:
-                scipy_constraint["type"] = "ineq"
-                scipy_constraint["fun"] = lambda x: np.squeeze(
-                    func(x) - constraint["lower"]
-                )
-
-            list_of_constraints.append(scipy_constraint)
-
-        self.list_of_constraints = list_of_constraints
-
     def find_next_point(self):
         """
+        Find the design point corresponding to the minimum value of the
+        corrected low-fidelity model within the trust region.
         
-        Parameters
-        ----------
+        This method uses the most recent design point in x as the initial
+        point for the local optimization.
         
         Returns
         -------
-        
+        x_new : array
+            The design point corresponding to the minimum value of the corrected
+            low-fidelity model within the trust region.
+        hits_boundary : boolean
+            True is the new design point hits one of the boundaries of the
+            trust region.        
         """
         x0 = self.x[-1, :]
 
@@ -125,12 +128,19 @@ class SimpleTrustRegion(BaseMethod):
 
     def update_trust_region(self, x_new, hits_boundary):
         """
+        Either expand or contract the trust region radius based on the
+        value of the high-fidelity function at the proposed design point.
+        
+        Modifies `x` and `trust_radius` in-place.
         
         Parameters
         ----------
-        
-        Returns
-        -------
+        x_new : array
+            The design point corresponding to the minimum value of the corrected
+            low-fidelity model within the trust region.
+        hits_boundary : boolean
+            True is the new design point hits one of the boundaries of the
+            trust region.    
         
         """
         # 3. Compute the ratio of actual improvement to predicted improvement
@@ -161,10 +171,9 @@ class SimpleTrustRegion(BaseMethod):
             rho = actual_reduction / predicted_reduction
 
         # 5. Update trust region according to rho_k
-        eta = 0.25
-        if rho >= eta and hits_boundary:
+        if rho >= self.eta and hits_boundary:
             self.trust_radius = min(2 * self.trust_radius, self.max_trust_radius)
-        elif rho < eta:  # Unclear if this is the best check
+        elif rho < self.eta:  # Unclear if this is the best check
             self.trust_radius *= 0.25
 
         if self.disp:
@@ -175,12 +184,12 @@ class SimpleTrustRegion(BaseMethod):
 
     def optimize(self, plot=False):
         """
+        Actually perform the trust-region optimization.
         
         Parameters
         ----------
-        
-        Returns
-        -------
+        plot : boolean
+            If True, plot a 2d representation of the optimization process.
         
         """
         self.construct_approximations()
@@ -214,12 +223,9 @@ class SimpleTrustRegion(BaseMethod):
 
     def plot_functions(self):
         """
+        Plot a 2D contour plot of the design space and optimizer progress.
         
-        Parameters
-        ----------
-        
-        Returns
-        -------
+        Saves figures to .png files.
         
         """
         n_plot = 9

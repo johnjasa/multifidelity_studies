@@ -33,6 +33,9 @@ class BaseMethod:
     constraints : list of dicts
         Each dict contains the constraint output name, the constraint type (equality
         or inequality), and the constraint value. One dict for each set of constraints.
+    list_of_constraints : list of dicts
+        A list of converted constraints and callable functions ready to be used
+        by Scipy optimize.
     n_dims : int
         Number of dimensions in the design space, i.e. number of design variables.
     x : array
@@ -155,6 +158,41 @@ class BaseMethod:
         self.constraints.append(
             {"name": constraint_name, "equals": equals, "lower": lower, "upper": upper,}
         )
+
+    def process_constraints(self):
+        """
+        Convert the list of user-defined constraint dicts into constraint functions
+        compatible with Scipy optimize.
+        
+        Modifies `list_of_constraints` in-place.
+        
+        """
+        list_of_constraints = []
+        for constraint in self.constraints:
+            scipy_constraint = {}
+
+            func = self.approximation_functions[constraint["name"]]
+            if constraint["equals"] is not None:
+                scipy_constraint["type"] = "eq"
+                scipy_constraint["fun"] = lambda x: np.squeeze(
+                    func(x) - constraint["equals"]
+                )
+
+            if constraint["upper"] is not None:
+                scipy_constraint["type"] = "ineq"
+                scipy_constraint["fun"] = lambda x: np.squeeze(
+                    constraint["upper"] - func(x)
+                )
+
+            if constraint["lower"] is not None:
+                scipy_constraint["type"] = "ineq"
+                scipy_constraint["fun"] = lambda x: np.squeeze(
+                    func(x) - constraint["lower"]
+                )
+
+            list_of_constraints.append(scipy_constraint)
+
+        self.list_of_constraints = list_of_constraints
 
     def construct_approximations(self, interp_method="smt"):
         """
