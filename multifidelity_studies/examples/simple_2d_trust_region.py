@@ -6,7 +6,7 @@ from multifidelity_studies.methods.trust_region import SimpleTrustRegion
 # Following Algo 2.1 from Andrew March's dissertation
 np.random.seed(13)
 
-bounds = np.array([[0.0, 1.0], [0.0, 1.0]])
+bounds = {'x' : np.array([[0.0, 1.0], [0.0, 1.0]])}
 desvars = {'x' : np.array([0., 0.25])}
 model_low = simple_2D_low_model(desvars)
 model_high = simple_2D_high_model(desvars)

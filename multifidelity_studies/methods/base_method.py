@@ -15,9 +15,9 @@ class BaseMethod:
         The low-fidelity model instance provided by the user.
     model_high : BaseModel instance
         The high-fidelity model instance provided by the user.
-    bounds : array
-        A 2D array of design variable bounds, e.g. [[0., 1.], ...] for
-        each design variable.
+    bounds : dict
+        A dictionary with keys for each design variable and the values of those
+        keys correspond to the design variable bounds, e.g. [[0., 1.], ...].
     disp : bool, optional
         If True, the method will print out progress and results to the terminal.
     counter_plot : int
@@ -59,9 +59,9 @@ class BaseMethod:
             The low-fidelity model instance provided by the user.
         model_high : BaseModel instance
             The high-fidelity model instance provided by the user.
-        bounds : array
-            A 2D array of design variable bounds, e.g. [[0., 1.], ...] for
-            each design variable.
+        bounds : dict
+            A dictionary with keys for each design variable and the values of those
+            keys correspond to the design variable bounds, e.g. [[0., 1.], ...].
         disp : bool, optional
             If True, the method will print out progress and results to the terminal.
         num_initial_points : int
@@ -70,17 +70,41 @@ class BaseMethod:
             require more initial points to get a reasonable surrogate approximation.
         """
 
-        self.bounds = np.array(bounds)
-        self.disp = disp
-
         self.model_low = model_low
         self.model_high = model_high
+        
+        self.bounds = self.flatten_bounds_dict(bounds)
+        self.disp = disp
 
         self.initialize_points(num_initial_points)
         self.counter_plot = 0
 
         self.objective = None
         self.constraints = []
+        
+    def flatten_bounds_dict(self, bounds):
+        """
+        Given a dict of bounds, return an array of bound pairs.
+        
+        Parameters
+        ----------
+        bounds : dict
+            Dict of bounds keys/values.
+            
+        Returns
+        -------
+        flattened_bounds : array
+            Flattened array of bounds values.
+        """
+        flattened_bounds = []
+
+        for key, value in bounds.items():
+            if isinstance(value, (float, list)):
+                value = np.array(value)
+            flattened_value = np.squeeze(value.flatten()).reshape(-1, 2)
+            flattened_bounds.extend(flattened_value)
+
+        return np.array(flattened_bounds)
 
     def initialize_points(self, num_initial_points):
         """

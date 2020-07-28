@@ -5,7 +5,7 @@ from time import time
 from multifidelity_studies.methods.trust_region import SimpleTrustRegion
 
 
-bounds = np.array([[0.5, 1.5], [0.5, 1.5], [0.5, 1.5], [0.5, 1.5], [0.5, 1.5]])
+bounds = {'blade.opt_var.chord_opt_gain' : np.array([[0.5, 1.5], [0.5, 1.5], [0.5, 1.5], [0.5, 1.5], [0.5, 1.5]])}
 desvars = {'blade.opt_var.chord_opt_gain' : np.array([1., 1., 1., 1., 1.])}
 model_low = CCBlade(desvars, n_span=10) #warmstart_file='cc_results_10.pkl')
 

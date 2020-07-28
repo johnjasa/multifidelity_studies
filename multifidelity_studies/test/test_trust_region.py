@@ -9,7 +9,7 @@ class Test(unittest.TestCase):
     def test_optimization(self):
         np.random.seed(13)
         
-        bounds = np.array([[0.0, 1.0], [0.0, 1.0]])
+        bounds = {'x' : np.array([[0.0, 1.0], [0.0, 1.0]])}
         desvars = {'x' : np.array([0., 0.25])}
         model_low = simple_2D_low_model(desvars)
         model_high = simple_2D_high_model(desvars)
@@ -24,7 +24,7 @@ class Test(unittest.TestCase):
     def test_set_initial_point(self):
         np.random.seed(13)
         
-        bounds = np.array([[0.0, 1.0], [0.0, 1.0]])
+        bounds = {'x' : np.array([[0.0, 1.0], [0.0, 1.0]])}
         desvars = {'x' : np.array([0., 0.25])}
         model_low = simple_2D_low_model(desvars)
         model_high = simple_2D_high_model(desvars)
