@@ -65,7 +65,7 @@ openfast:
             #   Seeds: [11, 12, 13, 14, 15, 16]
         Power_Curve:
             turbulent_power_curve: False # False: Steady Wind, True: Turbulent Inflow
-            U:     [3., 5., 9., 25.]
+            U:     [9.]
             # Seeds: [11, 12, 13, 14, 15, 16] # Used only when turbulent_power_curve=True
             # U:     [3., 9., 11., 15.]
             Seeds: [1] # Used only when turbulent_power_curve=True
