@@ -10,9 +10,9 @@ class Test(unittest.TestCase):
         ## File management
         run_dir = os.path.dirname(os.path.realpath(__file__)) + os.sep
         fname_wt_input = run_dir + "../models/IEA-15-240-RWT_WISDEMieaontology4all.yaml"
-        fname_analysis_options_ccblade = run_dir + "../models/analysis_options_ccblade.yaml"
-        fname_analysis_options_openfast = run_dir + "../models/analysis_options_openfast.yaml"
-        fname_opt_options = run_dir + "../models/optimization_options.yaml"
+        fname_analysis_options_ccblade = run_dir + "../models/modeling_options_ccblade.yaml"
+        fname_analysis_options_openfast = run_dir + "../models/modeling_options_openfast.yaml"
+        fname_opt_options = run_dir + "../models/analysis_options.yaml"
         folder_output = run_dir + "it_0/"
         fname_wt_output = folder_output + "/temp.yaml"
 
@@ -24,6 +24,7 @@ class Test(unittest.TestCase):
             fname_wt_output,
             folder_output,
         )
+        np.testing.assert_allclose(wt_opt_ccblade["ccblade.CP"], 0.43705181)
 
         # Run OpenFAST
         wt_opt_openfast, analysis_options_openfast, opt_options_openfast = run_wisdem(
@@ -33,9 +34,7 @@ class Test(unittest.TestCase):
             fname_wt_output,
             folder_output,
         )
-        
-        np.testing.assert_allclose(wt_opt_ccblade["ccblade.CP"], 0.43705181)
-        np.testing.assert_allclose(wt_opt_openfast["aeroelastic.Cp"][0], 0.48230981)
+        np.testing.assert_allclose(wt_opt_openfast["aeroelastic.Cp_out"][0], 0.48288475254124313)
 
 if __name__ == '__main__':
     unittest.main()
