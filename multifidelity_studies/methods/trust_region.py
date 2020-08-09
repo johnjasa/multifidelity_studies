@@ -340,8 +340,10 @@ class SimpleTrustRegion(BaseMethod):
             plt.xlabel("x")
             plt.ylabel("y")
             
-            plt.legend()
-            plt.annotate
+            ax = plt.gca()
+            ax.text(s="Low-fidelity", x=0.1, y=0.5, c="tab:green", fontsize=12)
+            ax.text(s="High-fidelity", x=0.2, y=-9., c="tab:orange", fontsize=12)
+            ax.text(s="Surrogate model", x=0.6, y=-8., c="tab:blue", fontsize=12)
             
             niceplots.adjust_spines(outward=True)
             
@@ -349,5 +351,3 @@ class SimpleTrustRegion(BaseMethod):
             
             plt.savefig(f"1d_{self.counter_plot}.png", dpi=300)
             self.counter_plot += 1
-
-            exit()
