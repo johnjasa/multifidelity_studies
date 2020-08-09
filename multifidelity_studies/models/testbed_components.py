@@ -32,6 +32,20 @@ def simple_2D_low(x):
     term1 = A * (4 * x[1] - 1) ** 2
     term2 = B * x[0]
     return term1 + term2
+    
+    
+class simple_1D_high_model(BaseModel):
+    def compute(self, desvars):
+        outputs = {}
+        outputs["y"] = simple_1D_high(desvars["x"])
+        return outputs
+
+
+class simple_1D_low_model(BaseModel):
+    def compute(self, desvars):
+        outputs = {}
+        outputs["y"] = simple_1D_low(desvars["x"])
+        return outputs
 
 
 class simple_2D_high_model(BaseModel):

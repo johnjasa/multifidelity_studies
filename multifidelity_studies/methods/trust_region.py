@@ -228,54 +228,126 @@ class SimpleTrustRegion(BaseMethod):
         Saves figures to .png files.
         
         """
-        n_plot = 9
-        x_plot = np.linspace(self.bounds[0, 0], self.bounds[0, 1], n_plot)
-        y_plot = np.linspace(self.bounds[1, 0], self.bounds[1, 1], n_plot)
-        X, Y = np.meshgrid(x_plot, y_plot)
-        x_values = np.vstack((X.flatten(), Y.flatten())).T
+        
+        if self.n_dims == 2:
+            n_plot = 9
+            x_plot = np.linspace(self.bounds[0, 0], self.bounds[0, 1], n_plot)
+            y_plot = np.linspace(self.bounds[1, 0], self.bounds[1, 1], n_plot)
+            X, Y = np.meshgrid(x_plot, y_plot)
+            x_values = np.vstack((X.flatten(), Y.flatten())).T
 
-        y_plot_high = self.model_high.run_vec(x_values)[self.objective].reshape(
-            n_plot, n_plot
-        )
+            y_plot_high = self.model_high.run_vec(x_values)[self.objective].reshape(
+                n_plot, n_plot
+            )
 
-        # surrogate = []
-        # for x_value in x_values:
-        #     surrogate.append(np.squeeze(self.approximation_functions['con'](x_value)))
-        # surrogate = np.array(surrogate)
-        # y_plot_high = surrogate.reshape(n_plot, n_plot)
+            # surrogate = []
+            # for x_value in x_values:
+            #     surrogate.append(np.squeeze(self.approximation_functions['con'](x_value)))
+            # surrogate = np.array(surrogate)
+            # y_plot_high = surrogate.reshape(n_plot, n_plot)
 
-        plt.figure(figsize=(6, 6))
-        plt.contourf(X, Y, y_plot_high, levels=101)
-        plt.scatter(self.x[:, 0], self.x[:, 1], color="white")
+            plt.figure(figsize=(6, 6))
+            plt.contourf(X, Y, y_plot_high, levels=101)
+            plt.scatter(self.x[:, 0], self.x[:, 1], color="white")
 
-        x = self.x[-1, 0]
-        y = self.x[-1, 1]
-        points = np.array(
-            [
-                [x + self.trust_radius, y + self.trust_radius],
-                [x + self.trust_radius, y - self.trust_radius],
-                [x - self.trust_radius, y - self.trust_radius],
-                [x - self.trust_radius, y + self.trust_radius],
-                [x + self.trust_radius, y + self.trust_radius],
-            ]
-        )
-        plt.plot(points[:, 0], points[:, 1], "w--")
+            x = self.x[-1, 0]
+            y = self.x[-1, 1]
+            points = np.array(
+                [
+                    [x + self.trust_radius, y + self.trust_radius],
+                    [x + self.trust_radius, y - self.trust_radius],
+                    [x - self.trust_radius, y - self.trust_radius],
+                    [x - self.trust_radius, y + self.trust_radius],
+                    [x + self.trust_radius, y + self.trust_radius],
+                ]
+            )
+            plt.plot(points[:, 0], points[:, 1], "w--")
 
-        plt.xlim(self.bounds[0])
-        plt.ylim(self.bounds[1])
+            plt.xlim(self.bounds[0])
+            plt.ylim(self.bounds[1])
 
-        plt.xlabel("x0")
-        plt.ylabel("x1")
+            plt.xlabel("x0")
+            plt.ylabel("x1")
 
-        # plt.show()
+            # plt.show()
 
-        num_iter = self.x.shape[0]
-        num_offset = 3
+            num_iter = self.x.shape[0]
+            num_offset = 3
 
-        if num_iter <= 5:
-            for i in range(num_offset):
+            if num_iter <= 5:
+                for i in range(num_offset):
+                    plt.savefig(f"image_{self.counter_plot}.png", dpi=300)
+                    self.counter_plot += 1
+            else:
                 plt.savefig(f"image_{self.counter_plot}.png", dpi=300)
                 self.counter_plot += 1
+                
         else:
-            plt.savefig(f"image_{self.counter_plot}.png", dpi=300)
+            import niceplots
+            
+            x_full = np.atleast_2d(np.linspace(0.0, 1.0, 101)).T
+            squeezed_x = np.squeeze(x_full)
+            y_full = squeezed_x.copy()
+            for i, x_val in enumerate(squeezed_x):
+                y_full[i] = self.approximation_functions[self.objective](np.atleast_2d(x_val.T))
+                
+            y_full_high = self.model_high.run_vec(x_full)[self.objective]
+            y_full_low = self.model_low.run_vec(x_full)[self.objective]
+            
+            y_low = self.model_low.run_vec(self.x)[self.objective]
+            y_high = self.model_high.run_vec(self.x)[self.objective]
+            
+            plt.figure()
+            
+            plt.plot(squeezed_x, y_full_low, label="low-fidelity", c="tab:green")
+            plt.scatter(self.x, y_low, c="tab:green")
+            
+            plt.plot(squeezed_x, y_full_high, label="high-fidelity", c="tab:orange")
+            plt.scatter(self.x, y_high, c="tab:orange")
+            
+            plt.plot(squeezed_x, np.squeeze(y_full), label="surrogate", c="tab:blue")
+            
+            x = self.x[-1, 0]
+            y_plot = y_high[-1]
+            y_diff = 0.5
+            x_lb = max(x - self.trust_radius, self.bounds[0, 0])
+            x_ub = min(x + self.trust_radius, self.bounds[0, 1])
+            points = np.array(
+                [
+                    [x_lb, y_plot],
+                    [x_ub, y_plot],
+                ]
+            )
+            plt.plot(points[:, 0], points[:, 1], "-", color='gray', clip_on=False)
+            points = np.array(
+                [
+                    [x_lb, y_plot - y_diff],
+                    [x_lb, y_plot + y_diff],
+                ]
+            )
+            plt.plot(points[:, 0], points[:, 1], "-", color='gray', clip_on=False)
+            points = np.array(
+                [
+                    [x_ub, y_plot - y_diff],
+                    [x_ub, y_plot + y_diff],
+                ]
+            )
+            plt.plot(points[:, 0], points[:, 1], "-", color='gray', clip_on=False)
+    
+            plt.xlim(self.bounds[0])
+            plt.ylim([-10, 10])
+
+            plt.xlabel("x")
+            plt.ylabel("y")
+            
+            plt.legend()
+            plt.annotate
+            
+            niceplots.adjust_spines(outward=True)
+            
+            plt.tight_layout()
+            
+            plt.savefig(f"1d_{self.counter_plot}.png", dpi=300)
             self.counter_plot += 1
+
+            exit()
