@@ -319,6 +319,7 @@ class SimpleTrustRegion(BaseMethod):
                 ]
             )
             plt.plot(points[:, 0], points[:, 1], "-", color='gray', clip_on=False)
+            
             points = np.array(
                 [
                     [x_lb, y_plot - y_diff],
@@ -326,6 +327,7 @@ class SimpleTrustRegion(BaseMethod):
                 ]
             )
             plt.plot(points[:, 0], points[:, 1], "-", color='gray', clip_on=False)
+            
             points = np.array(
                 [
                     [x_ub, y_plot - y_diff],
@@ -342,7 +344,7 @@ class SimpleTrustRegion(BaseMethod):
             
             ax = plt.gca()
             ax.text(s="Low-fidelity", x=0.1, y=0.5, c="tab:green", fontsize=12)
-            ax.text(s="High-fidelity", x=0.2, y=-9., c="tab:orange", fontsize=12)
+            ax.text(s="High-fidelity", x=0.22, y=-9., c="tab:orange", fontsize=12)
             ax.text(s="Surrogate model", x=0.6, y=-8., c="tab:blue", fontsize=12)
             
             niceplots.adjust_spines(outward=True)
