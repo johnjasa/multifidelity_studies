@@ -11,12 +11,12 @@ from wisdem.ccblade import CCBlade as CCBladeOrig
 
 ## File management
 run_dir = os.path.dirname(os.path.realpath(__file__)) + os.sep
-fname_wt_input = run_dir + "IEA-15-240-RWT_WISDEMieaontology4all.yaml"
-fname_analysis_options_ccblade = run_dir + "analysis_options_ccblade.yaml"
-fname_analysis_options_openfast = run_dir + "analysis_options_openfast.yaml"
-fname_opt_options = run_dir + "optimization_options.yaml"
+fname_wt_input = run_dir + "../models/IEA-15-240-RWT_WISDEMieaontology4all.yaml"
+fname_analysis_options_ccblade = run_dir + "../models/modeling_options_ccblade.yaml"
+fname_analysis_options_openfast = run_dir + "../models/modeling_options_openfast.yaml"
+fname_opt_options = run_dir + "../models/analysis_options.yaml"
 folder_output = run_dir + "it_0/"
-fname_wt_output = folder_output + "temp.yaml"
+fname_wt_output = folder_output + "/temp.yaml"
 
 
 class FullCCBlade(BaseModel):
