@@ -624,10 +624,7 @@ materials:
       nu: [0.27, 0.27, 0.27]
       Xt: [0.0, 0.0, 0.0]
       Xc: [0.0, 0.0, 0.0]
-      S: [None, None, None]
-      GIc: None
-      GIIc: None
-      alp0: None
+      S: [0., 0., 0.]
       fvf: 0.5384615384615385
       fwf: 0.6461538461538463
       ply_t: 0.0010317460317460314
@@ -777,7 +774,7 @@ environment:
     air_dyn_viscosity: 1.81e-5
     weib_shape_parameter: 2.
     air_speed_sound: 340.
-    shear_exp: 0.2
+    shear_exp: 0.0
     water_density: 1025.0
     water_dyn_viscosity: 1.3351e-3
     soil_shear_modulus: 140e6
