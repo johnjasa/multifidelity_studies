@@ -246,9 +246,17 @@ class SimpleTrustRegion(BaseMethod):
             # surrogate = np.array(surrogate)
             # y_plot_high = surrogate.reshape(n_plot, n_plot)
 
-            plt.figure(figsize=(6, 6))
-            plt.contourf(X, Y, y_plot_high, levels=101)
+            fig = plt.figure(figsize=(7.05, 5))
+            contour = plt.contourf(X, Y, y_plot_high, levels=201)
             plt.scatter(self.x[:, 0], self.x[:, 1], color="white")
+            ax = plt.gca()
+            ax.set_aspect('equal', 'box')
+            
+            cbar = fig.colorbar(contour)
+            cbar.ax.set_ylabel('CP')
+            ticks = np.round(np.linspace(0.305, 0.48286, 6), 3)
+            cbar.set_ticks(ticks)
+            cbar.set_ticklabels(ticks)
 
             x = self.x[-1, 0]
             y = self.x[-1, 1]
@@ -266,20 +274,20 @@ class SimpleTrustRegion(BaseMethod):
             plt.xlim(self.bounds[0])
             plt.ylim(self.bounds[1])
 
-            plt.xlabel("x0")
-            plt.ylabel("x1")
+            plt.xlabel("Chord DV #1")
+            plt.ylabel("Chord DV #2")
 
-            # plt.show()
+            plt.tight_layout()
 
             num_iter = self.x.shape[0]
-            num_offset = 3
+            num_offset = 10
 
             if num_iter <= 5:
                 for i in range(num_offset):
-                    plt.savefig(f"image_{self.counter_plot}.png", dpi=300)
+                    plt.savefig(f"image_{self.counter_plot}.png", dpi=300, bbox_inches='tight')
                     self.counter_plot += 1
             else:
-                plt.savefig(f"image_{self.counter_plot}.png", dpi=300)
+                plt.savefig(f"image_{self.counter_plot}.png", dpi=300, bbox_inches='tight')
                 self.counter_plot += 1
                 
         else:
@@ -344,8 +352,8 @@ class SimpleTrustRegion(BaseMethod):
             
             ax = plt.gca()
             ax.text(s="Low-fidelity", x=0.1, y=0.5, c="tab:green", fontsize=12)
-            ax.text(s="High-fidelity", x=0.22, y=-9., c="tab:orange", fontsize=12)
-            ax.text(s="Surrogate model", x=0.6, y=-8., c="tab:blue", fontsize=12)
+            ax.text(s="High-fidelity", x=0.26, y=-8.5, c="tab:orange", fontsize=12)
+            ax.text(s="Augmented low-fidelity", x=0.6, y=-10., c="tab:blue", fontsize=12)
             
             niceplots.adjust_spines(outward=True)
             
