@@ -17,19 +17,13 @@ fname_wt_output = folder_output + "temp.yaml"
 wt_opt_ccblade, analysis_options_ccblade, opt_options_ccblade = run_wisdem(
     fname_wt_input,
     fname_modeling_options_ccblade,
-    fname_analysis_options,
-    fname_wt_output,
-    folder_output,
-)
-
+    fname_analysis_options)
+    
 # Run OpenFAST
 wt_opt_openfast, analysis_options_openfast, opt_options_openfast = run_wisdem(
     fname_wt_input,
     fname_modeling_options_openfast,
-    fname_analysis_options,
-    fname_wt_output,
-    folder_output,
-)
+    fname_analysis_options)
 
 if MPI:
     rank = MPI.COMM_WORLD.Get_rank()
