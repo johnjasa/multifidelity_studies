@@ -32,8 +32,6 @@ class FullCCBlade(BaseModel):
             fname_wt_input,
             fname_analysis_options_ccblade,
             fname_opt_options,
-            fname_wt_output,
-            folder_output,
             desvars,
         )
 
@@ -85,7 +83,7 @@ class CCBlade(BaseModel):
         self.n_span = n_span
 
     def compute(self, desvars):
-        with open(f"CCBlade_inputs_{self.n_span}.pkl", "rb") as f:
+        with open(run_dir + f"CCBlade_inputs_{self.n_span}.pkl", "rb") as f:
             saved_dict = dill.load(f)
 
         chord_opt_gain = desvars["blade.opt_var.chord_opt_gain"]

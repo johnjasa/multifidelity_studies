@@ -5,10 +5,10 @@ Analysis_Flags:
     # Control which WISDEM modules are executed.
     # (GOAL) If inputs are missing for a module, a warning will be written to the screen and the module disabled.
     RotorSE:  True
-    DriveSE:  False
-    TowerSE:  False
-    ServoSE:  False
-    BOS:      False
+    DriveSE:  True
+    TowerSE:  True
+    ServoSE:  True
+    BOS:      True
     OpenFAST: False   # Flag to run aeroelasticse, the wrapper of OpenFAST
 
 yaml:
@@ -22,7 +22,7 @@ xfoil:
 rotorse:
     n_aoa: 200        # Number of angles of attack used to define polars
     n_xy: 200         # Number of angles of coordinate points used to discretize each airfoil
-    n_span: 10        # Number of spanwise stations used to define the blade properties
+    n_span: 30        # Number of spanwise stations used to define the blade properties
     FatigueMode: 0
 
 openfast:
