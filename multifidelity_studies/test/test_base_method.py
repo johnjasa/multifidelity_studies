@@ -61,6 +61,20 @@ class Test(unittest.TestCase):
         flattened_desvars = model_low.flatten_desvars(desvars)
         np.testing.assert_allclose(func(flattened_desvars), -5.33064616)
         
+    def test_set_initial_point(self):
+        np.random.seed(13)
+        
+        bounds = {'x' : np.array([[0.0, 1.0], [0.0, 1.0]])}
+        desvars = {'x' : np.array([0., 0.25])}
+        model_low = simple_2D_low_model(desvars)
+        model_high = simple_2D_high_model(desvars)
+        trust_region = BaseMethod(model_low, model_high, bounds, disp=False)
+        
+        trust_region.add_objective('y')
+        trust_region.set_initial_point([0.5, 0.5])
+        
+        np.testing.assert_allclose(trust_region.design_vectors[-1, :], [0.5, 0.5])
+        
 
 if __name__ == '__main__':
     unittest.main()

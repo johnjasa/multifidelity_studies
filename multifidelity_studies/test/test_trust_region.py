@@ -17,24 +17,9 @@ class Test(unittest.TestCase):
         
         trust_region.add_objective('y')
         
-        trust_region.optimize()
+        results = trust_region.optimize()
         
-        np.testing.assert_allclose(trust_region.design_vectors[-1, :], [0., 0.333], atol=1e-3)
-        
-    def test_set_initial_point(self):
-        np.random.seed(13)
-        
-        bounds = {'x' : np.array([[0.0, 1.0], [0.0, 1.0]])}
-        desvars = {'x' : np.array([0., 0.25])}
-        model_low = simple_2D_low_model(desvars)
-        model_high = simple_2D_high_model(desvars)
-        trust_region = SimpleTrustRegion(model_low, model_high, bounds, disp=False)
-        
-        trust_region.add_objective('y')
-        trust_region.set_initial_point([0.5, 0.5])
-        
-        np.testing.assert_allclose(trust_region.design_vectors[-1, :], [0.5, 0.5])
-
+        np.testing.assert_allclose(results['optimal_design'], [0., 0.333], atol=1e-3)
         
 
 if __name__ == '__main__':
