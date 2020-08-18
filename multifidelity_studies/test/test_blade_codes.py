@@ -21,20 +21,17 @@ class Test(unittest.TestCase):
             fname_wt_input,
             fname_analysis_options_ccblade,
             fname_opt_options,
-            fname_wt_output,
-            folder_output,
         )
-        np.testing.assert_allclose(wt_opt_ccblade["ccblade.CP"], 0.43705181)
+        np.testing.assert_allclose(wt_opt_ccblade["ccblade.CP"], 0.472391)
 
         # Run OpenFAST
         wt_opt_openfast, analysis_options_openfast, opt_options_openfast = run_wisdem(
             fname_wt_input,
             fname_analysis_options_openfast,
             fname_opt_options,
-            fname_wt_output,
-            folder_output,
         )
-        np.testing.assert_allclose(wt_opt_openfast["aeroelastic.Cp_out"][0], 0.48288475254124313)
+        print(wt_opt_openfast["aeroelastic.Cp_out"][0])
+        np.testing.assert_allclose(wt_opt_openfast["aeroelastic.Cp_out"][0], 0.48262791201466426)
 
 if __name__ == '__main__':
     unittest.main()
