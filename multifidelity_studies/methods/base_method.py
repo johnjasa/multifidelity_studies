@@ -38,7 +38,7 @@ class BaseMethod:
         by Scipy optimize.
     n_dims : int
         Number of dimensions in the design space, i.e. number of design variables.
-    x : array
+    design_vectors : array
         2-D array containing all of the queried design points. Rows (the 2nd dimension)
         contain the design vectors, whereas the number of columns (the 1st dimension)
         correspond to the number of design points.
@@ -108,10 +108,10 @@ class BaseMethod:
 
     def initialize_points(self, num_initial_points):
         """
-        Populate the x array with a set of initial points that will be used
+        Populate the design_vectors array with a set of initial points that will be used
         to create the initial surrogate models.
         
-        Modifies `x` in-place.
+        Modifies `design_vectors` in-place.
         
         Parameters
         ----------
@@ -122,7 +122,7 @@ class BaseMethod:
         """
         self.n_dims = self.model_high.total_size
         x_init_raw = np.random.rand(num_initial_points, self.n_dims)
-        self.x = (
+        self.design_vectors = (
             x_init_raw * (self.bounds[:, 1] - self.bounds[:, 0]) + self.bounds[:, 0]
         )
 
@@ -130,7 +130,7 @@ class BaseMethod:
         """
         Set the initial point for the optimization method.
         
-        Modifies `x` in-place.
+        Modifies `design_vectors` in-place.
         
         Parameters
         ----------
@@ -140,7 +140,7 @@ class BaseMethod:
         """
         if isinstance(initial_design, (float, list)):
             initial_design = np.array(initial_design)
-        self.x = np.vstack((self.x, initial_design))
+        self.design_vectors = np.vstack((self.design_vectors, initial_design))
 
     def add_objective(self, objective_name, scaler=1.0):
         """
@@ -247,8 +247,8 @@ class BaseMethod:
             and 'smt' for now. 
         
         """
-        outputs_low = self.model_low.run_vec(self.x)
-        outputs_high = self.model_high.run_vec(self.x)
+        outputs_low = self.model_low.run_vec(self.design_vectors)
+        outputs_high = self.model_high.run_vec(self.design_vectors)
 
         approximation_functions = {}
         outputs_to_approximate = [self.objective]
@@ -261,7 +261,7 @@ class BaseMethod:
             differences = outputs_high[output_name] - outputs_low[output_name]
 
             if interp_method == "rbf":
-                input_arrays = np.split(self.x, self.x.shape[1], axis=1)
+                input_arrays = np.split(self.design_vectors, self.design_vectors.shape[1], axis=1)
                 input_arrays = [x.flatten() for x in input_arrays]
 
                 # Construct RBF interpolater for error function
@@ -280,7 +280,7 @@ class BaseMethod:
                 # )
                 sm = smt.RBF(print_global=False,)
 
-                sm.set_training_values(self.x, differences)
+                sm.set_training_values(self.design_vectors, differences)
                 sm.train()
 
                 def approximation_function(x, output_name=output_name, sm=sm):

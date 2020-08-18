@@ -18,7 +18,7 @@ class Test(unittest.TestCase):
         method_instance.add_objective('y')
         method_instance.set_initial_point([0.5, 0.5])
         
-        np.testing.assert_allclose(method_instance.x[-1, :], [0.5, 0.5], )
+        np.testing.assert_allclose(method_instance.design_vectors[-1, :], [0.5, 0.5], )
         
     def test_bounds_and_initial_points(self):
         np.random.seed(13)
@@ -35,14 +35,14 @@ class Test(unittest.TestCase):
                                 [  2.78989172,  -3.71394319],
                                 [  3.47388024,  -4.83761718]])
         
-        np.testing.assert_allclose(method_instance.x, init_points)
+        np.testing.assert_allclose(method_instance.design_vectors, init_points)
         
         
         np.random.seed(13)
         
         method_instance = BaseMethod(model_low, model_high, bounds, disp=False, num_initial_points=3)
         
-        np.testing.assert_allclose(method_instance.x, init_points[:3, :])
+        np.testing.assert_allclose(method_instance.design_vectors, init_points[:3, :])
         
     def test_approximation(self):
         np.random.seed(13)

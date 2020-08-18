@@ -79,7 +79,7 @@ class SimpleTrustRegion(BaseMethod):
         Find the design point corresponding to the minimum value of the
         corrected low-fidelity model within the trust region.
         
-        This method uses the most recent design point in x as the initial
+        This method uses the most recent design point in design_vectors as the initial
         point for the local optimization.
         
         Returns
@@ -91,7 +91,7 @@ class SimpleTrustRegion(BaseMethod):
             True is the new design point hits one of the boundaries of the
             trust region.        
         """
-        x0 = self.x[-1, :]
+        x0 = self.design_vectors[-1, :]
 
         # min (m_k(x_k + s_k)) st ||x_k|| <= del K
         trust_region_lower_bounds = x0 - self.trust_radius
@@ -131,7 +131,7 @@ class SimpleTrustRegion(BaseMethod):
         Either expand or contract the trust region radius based on the
         value of the high-fidelity function at the proposed design point.
         
-        Modifies `x` and `trust_radius` in-place.
+        Modifies `design_vectors` and `trust_radius` in-place.
         
         Parameters
         ----------
@@ -145,7 +145,7 @@ class SimpleTrustRegion(BaseMethod):
         """
         # 3. Compute the ratio of actual improvement to predicted improvement
         prev_point_high = (
-            self.objective_scaler * self.model_high.run(self.x[-1])[self.objective]
+            self.objective_scaler * self.model_high.run(self.design_vectors[-1])[self.objective]
         )
         new_point_high = (
             self.objective_scaler * self.model_high.run(x_new)[self.objective]
@@ -163,7 +163,7 @@ class SimpleTrustRegion(BaseMethod):
             if self.disp:
                 print("not enough reduction! rejecting point")
         else:
-            self.x = np.vstack((self.x, np.atleast_2d(x_new)))
+            self.design_vectors = np.vstack((self.design_vectors, np.atleast_2d(x_new)))
 
         if predicted_reduction == 0.0:
             rho = 0.0
@@ -209,7 +209,7 @@ class SimpleTrustRegion(BaseMethod):
             if plot:
                 self.plot_functions()
 
-            x_test = self.x[-1, :]
+            x_test = self.design_vectors[-1, :]
 
             if self.trust_radius <= 1e-6:
                 break
@@ -217,9 +217,9 @@ class SimpleTrustRegion(BaseMethod):
         if self.disp:
             print()
             print("Found optimal point!")
-            print(self.x[-1, :])
-            print(self.model_high.run(self.x[-1, :])[self.objective])
-            print(len(self.x[:, 0]), 'high fidelity calls')
+            print(self.design_vectors[-1, :])
+            print(self.model_high.run(self.design_vectors[-1, :])[self.objective])
+            print(len(self.design_vectors[:, 0]), 'high fidelity calls')
 
     def plot_functions(self):
         """
@@ -248,7 +248,7 @@ class SimpleTrustRegion(BaseMethod):
 
             fig = plt.figure(figsize=(7.05, 5))
             contour = plt.contourf(X, Y, y_plot_high, levels=201)
-            plt.scatter(self.x[:, 0], self.x[:, 1], color="white")
+            plt.scatter(self.design_vectors[:, 0], self.design_vectors[:, 1], color="white")
             ax = plt.gca()
             ax.set_aspect('equal', 'box')
             
@@ -258,8 +258,8 @@ class SimpleTrustRegion(BaseMethod):
             cbar.set_ticks(ticks)
             cbar.set_ticklabels(ticks)
 
-            x = self.x[-1, 0]
-            y = self.x[-1, 1]
+            x = self.design_vectors[-1, 0]
+            y = self.design_vectors[-1, 1]
             points = np.array(
                 [
                     [x + self.trust_radius, y + self.trust_radius],
@@ -279,7 +279,7 @@ class SimpleTrustRegion(BaseMethod):
 
             plt.tight_layout()
 
-            num_iter = self.x.shape[0]
+            num_iter = self.design_vectors.shape[0]
             num_offset = 10
 
             if num_iter <= 5:
@@ -302,20 +302,20 @@ class SimpleTrustRegion(BaseMethod):
             y_full_high = self.model_high.run_vec(x_full)[self.objective]
             y_full_low = self.model_low.run_vec(x_full)[self.objective]
             
-            y_low = self.model_low.run_vec(self.x)[self.objective]
-            y_high = self.model_high.run_vec(self.x)[self.objective]
+            y_low = self.model_low.run_vec(self.design_vectors)[self.objective]
+            y_high = self.model_high.run_vec(self.design_vectors)[self.objective]
             
             plt.figure()
             
             plt.plot(squeezed_x, y_full_low, label="low-fidelity", c="tab:green")
-            plt.scatter(self.x, y_low, c="tab:green")
+            plt.scatter(self.design_vectors, y_low, c="tab:green")
             
             plt.plot(squeezed_x, y_full_high, label="high-fidelity", c="tab:orange")
-            plt.scatter(self.x, y_high, c="tab:orange")
+            plt.scatter(self.design_vectors, y_high, c="tab:orange")
             
             plt.plot(squeezed_x, np.squeeze(y_full), label="surrogate", c="tab:blue")
             
-            x = self.x[-1, 0]
+            x = self.design_vectors[-1, 0]
             y_plot = y_high[-1]
             y_diff = 0.5
             x_lb = max(x - self.trust_radius, self.bounds[0, 0])

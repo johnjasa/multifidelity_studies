@@ -19,7 +19,7 @@ class Test(unittest.TestCase):
         
         trust_region.optimize()
         
-        np.testing.assert_allclose(trust_region.x[-1, :], [0., 0.333], atol=1e-3)
+        np.testing.assert_allclose(trust_region.design_vectors[-1, :], [0., 0.333], atol=1e-3)
         
     def test_set_initial_point(self):
         np.random.seed(13)
@@ -33,7 +33,7 @@ class Test(unittest.TestCase):
         trust_region.add_objective('y')
         trust_region.set_initial_point([0.5, 0.5])
         
-        np.testing.assert_allclose(trust_region.x[-1, :], [0.5, 0.5], )
+        np.testing.assert_allclose(trust_region.design_vectors[-1, :], [0.5, 0.5])
 
         
 
